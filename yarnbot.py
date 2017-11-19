@@ -38,7 +38,7 @@ MY_USER_ID = 'bot_user_id'
 MY_USER = '<@' + MY_USER_ID + '>'
 USERDB_FILENAME = 'known_users.pkl'
 
-VERSION = '1.6.3'
+VERSION = '1.7.0'
 
 # Ravelry auth info. Set from environment.
 RAV_ACC_KEY = ''
