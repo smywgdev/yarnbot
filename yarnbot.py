@@ -32,7 +32,9 @@ import requests
 from slackclient import SlackClient
 import logging
 
+# Set you bot user ID here
 MY_USER_ID = 'bot_user_id'
+
 MY_USER = '<@' + MY_USER_ID + '>'
 USERDB_FILENAME = 'known_users.pkl'
 
