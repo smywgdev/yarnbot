@@ -38,7 +38,7 @@ MY_USER_ID = 'bot_user_id'
 MY_USER = '<@' + MY_USER_ID + '>'
 USERDB_FILENAME = 'known_users.pkl'
 
-VERSION = '1.7.0'
+VERSION = '1.7.5'
 
 # Ravelry auth info. Set from environment.
 RAV_ACC_KEY = ''
@@ -99,6 +99,7 @@ acronyms = {
 	'inc': {'desc': 'increase/increases/increasing', 'url': 'http://www.vogueknitting.com/pattern_help/how-to/beyond_the_basics/increases'},
 	'sssk': {'desc': 'slip, slip, slip, knit 3 stitches together', 'url': 'http://newstitchaday.com/slip-slip-slip-knit-double-decrease/'},
 	'k': {'desc': 'knit', 'url': 'http://www.vogueknitting.com/pattern_help/how-to/learn_to_knit/the_knit_stitch'},
+	'kfb': {'desc': 'knit front and back', 'url': 'http://newstitchaday.com/knit-front-and-back-increase-kfb/'},
 	'st': {'desc': 'stitch', 'url': None},
 	'sts': {'desc': 'stitches', 'url': None},
 	'k2tog': {'desc': 'knit 2 stitches together', 'url': 'http://www.vogueknitting.com/pattern_help/how-to/beyond_the_basics/decreases/k2tog'},
@@ -416,13 +417,13 @@ def ravelry_yarn(rav_cmd):
 	attachments = []
 	for info in rav_result['yarns']:
 		
-		mach_wash = info['machine_washable']
+		mach_wash = info['machine_washable'] if 'machine_washable' in info else None
 		if mach_wash == None or not mach_wash:
 			mach_wash = 'No'
 		else:
 			mach_wash = 'Yes'
 
-		organic = info['organic']
+		organic = info['organic'] if 'organic' in info else None
 		if organic == None or not organic:
 			organic = 'No'
 		else:
@@ -718,13 +719,13 @@ def proc_msg(evt):
 				attachments = []
 				for info in similar_sorted[0:5]:
 					
-					mach_wash = info['machine_washable']
+					mach_wash = info['machine_washable'] if 'machine_washable' in info else None
 					if mach_wash == None or not mach_wash:
 						mach_wash = 'No'
 					else:
 						mach_wash = 'Yes'
 
-					organic = info['organic']
+					organic = info['organic'] if 'organic' in info else None
 					if organic == None or not organic:
 						organic = 'No'
 					else:
@@ -812,10 +813,18 @@ def proc_msg(evt):
 					attachment = dict()
 					attachment['fallback'] = fav['favorited']['name']
 					attachment['color'] = '#36a64f'
-					attachment['author_name'] = fav['favorited']['designer']['name']
 					attachment['title'] = fav['favorited']['name']
 					attachment['title_link'] = 'https://www.ravelry.com/patterns/library/' + fav['favorited']['permalink']
-					attachment['image_url'] = fav['favorited']['first_photo']['square_url']
+
+					# Sometime not everything is available
+					try:
+						attachment['image_url'] = fav['favorited']['first_photo']['square_url']
+					except:
+						logging.warn('Ravelry result with missing info: {0}'.format(fav))
+					try:
+						attachment['author_name'] = fav['favorited']['designer']['name']
+					except:
+						logging.warn('Ravelry result with missing info: {0}'.format(fav))
 
 					attachments.append( attachment )
 
@@ -940,6 +949,7 @@ def main_loop():
 	global event_count
 
 	please_close = False
+	auto_reconnect = True
 
 	while not please_close:
 		try:
@@ -977,6 +987,7 @@ def main_loop():
 			if ret != None:
 				if ret == 'quit':
 					please_close = True
+					auto_reconnect = False
 		elif evt_type == u'presence_change':
 			presence = evt[0]['presence']
 			user = evt[0]['user']
@@ -993,6 +1004,8 @@ def main_loop():
 
 
 	logging.info('Main loop exiting')
+
+	return auto_reconnect
 
 def load_userdb():
 	global known_users
@@ -1041,32 +1054,45 @@ if __name__ == '__main__':
 	SLACK_API_KEY = os.environ.get('SLACK_API_KEY')
 	sc = SlackClient('SLACK_API_KEY')
 
-	if not sc.rtm_connect():
-		logging.error("Couldn't connect to RTM in rtm_connect")
-		sys.exit()
+	finished = False
 
-	time.sleep(1)
+	while not finished:
+		logging.info("Trying to connect to RTM")
 
-	evt = sc.rtm_read()
+		if not sc.rtm_connect():
+			logging.error("Couldn't connect to RTM in rtm_connect")
+			sys.exit()
 
-	if len(evt) < 1 or evt[0]['type'] != u'hello':
-		logging.error("Couldn't connect to RTM (bad reply event {0})".format(evt))
-		sc.api_call("chat.postMessage",
-			channel="#test",
-			as_user=True,
-			text="I couldn't connect to RTM :(")
-		sys.exit()
+		auto_reconnect = True
 
-	sc.api_call("chat.postMessage",
-		channel="#test",
-		as_user=True,
-		text="Hello, I'm yarnbot. *yawn*")
+		while auto_reconnect:
+			time.sleep(1)
 
-	main_loop()
+			evt = sc.rtm_read()
 
-	sc.api_call("chat.postMessage",
-		channel="#test",
-		as_user=True,
-		text="I'm disconnecting.")
+			if len(evt) < 1 or evt[0]['type'] != u'hello':
+				logging.error("Couldn't connect to RTM (bad reply event {0})".format(evt))
+				sc.api_call("chat.postMessage",
+					channel="#test",
+					as_user=True,
+					text="I couldn't connect to RTM :(")
+				break
 
+			sc.api_call("chat.postMessage",
+				channel="#test",
+				as_user=True,
+				text="Hello, I'm yarnbot. *yawn*")
+
+			auto_reconnect = main_loop()
+
+			sc.api_call("chat.postMessage",
+				channel="#test",
+				as_user=True,
+				text="I'm disconnecting.")
+
+		if not auto_reconnect:
+			sys.exit()
+	
+		logging.info("Waiting to try reconnecting to RTM")
+		time.sleep(10)
 
