@@ -375,7 +375,7 @@ def ravelry_api_yarn(rav_cmd, page_size=5):
 			rav_cmd.remove(w)
 
 	parms = {'photo':'yes', 'page_size':str(page_size), 'sort':'projects'}
-	msg = 'Yarn search results for:'
+	msg = u'Yarn search results for:'
 	
 	filter_weight = []
 	for w in yarn_weights.keys():
@@ -393,14 +393,14 @@ def ravelry_api_yarn(rav_cmd, page_size=5):
 
 	if len(filter_weight) > 0:
 		parms.update({'weight': '|'.join(filter_weight)})
-		msg += ' {0} weight'.format( ' or '.join(filter_weight) )
+		msg += u' {0} weight'.format( ' or '.join(filter_weight) )
 
 	if len(filter_fiber) > 0:
 		parms.update({'fiber': '+'.join(filter_fiber)})
-		msg += ' with {0} fiber'.format( ' and '.join(filter_fiber) )
+		msg += u' with {0} fiber'.format( ' and '.join(filter_fiber) )
 
 	parms.update({'query':' '.join(rav_cmd)})
-	msg += ' containing "{0}"'.format(' '.join(rav_cmd))
+	msg += u' containing "{0}"'.format(' '.join(rav_cmd))
 
 	rav_result = ravelry_api('/yarns/search.json', parms)
 	
@@ -432,7 +432,7 @@ def ravelry_yarn(rav_cmd):
 		if info.has_key('yarn_weight'):
 			description = info['yarn_weight']['name']
 		else:
-			description = 'roving?'
+			description = u'roving?'
 
 		if info['gauge_divisor'] != None:
 			gauge_range = []
@@ -441,9 +441,9 @@ def ravelry_yarn(rav_cmd):
 			if info['max_gauge'] != None:
 				gauge_range.append(str(info['max_gauge']))
 
-			description += ', {0} sts = {1} in'.format(' to '.join(gauge_range), info['gauge_divisor'])
+			description += u', {0} sts = {1} in'.format(' to '.join(gauge_range), info['gauge_divisor'])
 
-		description += ', {0} g, {1} yds'.format(info['grams'],info['yardage'])
+		description += u', {0} g, {1} yds'.format(info['grams'],info['yardage'])
 
 		attachment = dict()
 		attachment['fallback'] = info['name']
@@ -475,12 +475,12 @@ def ravelry_pattern(rav_cmd):
 			rav_cmd.remove(w)
 
 	parms = {'photo':'yes', 'page_size':'5', 'sort':'projects'}
-	msg = 'Pattern search results for:'
+	msg = u'Pattern search results for:'
 	
 	filter_free = 'free' in rav_cmd
 	if filter_free:
 		rav_cmd.remove('free')
-		msg += ' free'
+		msg += u' free'
 
 	filter_craft = []
 	if 'knit' in rav_cmd or 'knitting' in rav_cmd:
@@ -505,19 +505,19 @@ def ravelry_pattern(rav_cmd):
 		parms.update({'availability':'free'})
 	if len(filter_craft) > 0:
 		parms.update({'craft': '|'.join(filter_craft)})
-		msg += ' {0}'.format( ' or '.join(filter_craft) )
+		msg += u' {0}'.format( ' or '.join(filter_craft) )
 
 	if len(filter_weight) > 0:
 		parms.update({'weight': '|'.join(filter_weight)})
-		msg += ' with {0} yarn'.format( ' or '.join(filter_weight) )
+		msg += u' with {0} yarn'.format( ' or '.join(filter_weight) )
 
 	parms.update({'query':' '.join(rav_cmd)})
-	msg += ' containing "{0}"'.format(' '.join(rav_cmd))
+	msg += u' containing "{0}"'.format(' '.join(rav_cmd))
 
 	search_query = '&'.join([ k + '=' + requests.utils.quote(v) for (k,v) in parms.items() if k != 'page_size'])
 	search_url = 'http://www.ravelry.com/patterns/search#' + search_query
 
-	msg += '\n(<{0}|search on ravelry>)'.format(search_url)
+	msg += u'\n(<{0}|search on ravelry>)'.format(search_url)
 
 
 	rav_result = ravelry_api('/patterns/search.json', parms)
@@ -759,7 +759,7 @@ def proc_msg(evt):
 
 					attachments.append( attachment )
 
-				msg = "Yarn most similar to {0} {1} {2}-weight ({3})".format(target_yarn['yarn_company_name'],target_yarn['name'],target_weight,','.join(target_fibers))
+				msg = u"Yarn most similar to {0} {1} {2}-weight ({3})".format(target_yarn['yarn_company_name'],target_yarn['name'],target_weight,','.join(target_fibers))
 				attach_json = json.dumps( attachments )
 
 				send_msg(channel_id, msg, attach_json)
@@ -792,15 +792,15 @@ def proc_msg(evt):
 			if rav_cmd[1] == 'favorites':
 				fav_user = rav_cmd[2]
 				parms = {'username':fav_user, 'page_size':'5'}
-				msg = "Most recent favorites for {0}".format(fav_user)
+				msg = u"Most recent favorites for {0}".format(fav_user)
 				if len(rav_cmd) > 3:
 					if rav_cmd[3] == 'tagged' and len(rav_cmd) > 4:
 						parms.update( {'tag': rav_cmd[4]} )
-						msg += ', tagged {0}'.format(rav_cmd[4])
+						msg += u', tagged {0}'.format(rav_cmd[4])
 					else:
 						query = " ".join(rav_cmd[3:])
 						parms.update( {'query': query} )
-						msg += ', containing {0}'.format(query) 
+						msg += u', containing {0}'.format(query) 
 				rav_result = ravelry_api('/people/{0}/favorites/list.json'.format(fav_user), parms)
 
 				if rav_result['paginator']['results'] == 0:
@@ -820,11 +820,11 @@ def proc_msg(evt):
 					try:
 						attachment['image_url'] = fav['favorited']['first_photo']['square_url']
 					except:
-						logging.warn('Ravelry result with missing info: {0}'.format(fav))
+						logging.warn(u'Ravelry result with missing info: {0}'.format(fav))
 					try:
 						attachment['author_name'] = fav['favorited']['designer']['name']
 					except:
-						logging.warn('Ravelry result with missing info: {0}'.format(fav))
+						logging.warn(u'Ravelry result with missing info: {0}'.format(fav))
 
 					attachments.append( attachment )
 
@@ -844,7 +844,7 @@ def proc_msg(evt):
 	elif msg_stripped == 'hello' or msg_stripped == 'hi' or msg_stripped.startswith('hello ') or msg_stripped.startswith('hi '):
 		reply = "Hi!"
 	elif msg_stripped == 'info':
-		reply = "I'm yarnbot {0}, started on {2}.\n".format(VERSION, time.ctime(start_time))
+		reply = "I'm yarnbot {0} ({1}), started on {2}.\n".format(VERSION, REVISION, time.ctime(start_time))
 		reply += "I've processed {0} events, {1} messages ({2} unknown), and had to reconnect {3} times.".format(event_count, message_count, unknown_count, reconnect_count)
 	elif msg_text == 'go to sleep':
 		logging.warn('Got kill message')
