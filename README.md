@@ -19,3 +19,21 @@ Yarnbot understands:
  * **info**: Yarnbot info
  * **help**: Help text
 
+## Screenshots
+
+Some typical yarnbot commands
+
+![yarnbot commands](https://imgur.com/1cPZXV1.png)
+
+Ravelry search results show short summaries of each pattern. Clicking the pattern will take you to Ravelry to see details.
+
+![yarnbot ravelry search](https://imgur.com/YgCLdvr.png)
+
+You can also search for yarn...
+
+![yarnbot ravelry yarn](https://imgur.com/efIld1B.png)
+
+...and find similar yarn.
+
+![yarnbot ravelry yarn similar to](https://imgur.com/gfA9aOC.png)
+
