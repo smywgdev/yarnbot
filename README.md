@@ -27,7 +27,7 @@ Some typical yarnbot commands
 
 Ravelry search results show short summaries of each pattern. Clicking the pattern will take you to Ravelry to see details.
 
-![yarnbot ravelry search](https://imgur.com/YgCLdvr.png)
+![yarnbot ravelry search](https://imgur.com/hx5Yo7x.png)
 
 You can also search for yarn...
 
