@@ -22,6 +22,7 @@
 
 from __future__ import division
 
+import os
 import sys
 import time
 import random
@@ -32,19 +33,15 @@ import requests
 from slackclient import SlackClient
 import logging
 
-# Set you bot user ID here
-MY_USER_ID = 'bot_user_id'
 
-MY_USER = '<@' + MY_USER_ID + '>'
 USERDB_FILENAME = 'known_users.pkl'
 
-VERSION = '1.7.5'
+VERSION = '1.8.0'
 
 # Ravelry auth info. Set from environment.
 RAV_ACC_KEY = ''
 RAV_SEC_KEY = ''
 
-known_users = [MY_USER_ID]
 reconnect_count = 0
 message_count = 0
 unknown_count = 0
@@ -844,7 +841,7 @@ def proc_msg(evt):
 	elif msg_stripped == 'hello' or msg_stripped == 'hi' or msg_stripped.startswith('hello ') or msg_stripped.startswith('hi '):
 		reply = "Hi!"
 	elif msg_stripped == 'info':
-		reply = "I'm yarnbot {0} ({1}), started on {2}.\n".format(VERSION, REVISION, time.ctime(start_time))
+		reply = "I'm yarnbot {0}, started on {1}.\n".format(VERSION, time.ctime(start_time))
 		reply += "I've processed {0} events, {1} messages ({2} unknown), and had to reconnect {3} times.".format(event_count, message_count, unknown_count, reconnect_count)
 	elif msg_text == 'go to sleep':
 		logging.warn('Got kill message')
@@ -1049,10 +1046,19 @@ if __name__ == '__main__':
 
 	start_time = time.time()
 
-	load_userdb()
-
 	SLACK_API_KEY = os.environ.get('SLACK_API_KEY')
-	sc = SlackClient('SLACK_API_KEY')
+	sc = SlackClient(SLACK_API_KEY)
+
+	auth_info = sc.api_call('auth.test')
+
+	MY_USER_ID = auth_info['user_id']
+
+	logging.info('My user id is {0}'.format(MY_USER_ID))
+
+	MY_USER = '<@' + MY_USER_ID + '>'
+	known_users = [MY_USER_ID]
+
+	load_userdb()
 
 	finished = False
 
@@ -1061,7 +1067,8 @@ if __name__ == '__main__':
 
 		if not sc.rtm_connect():
 			logging.error("Couldn't connect to RTM in rtm_connect")
-			sys.exit()
+			time.sleep(10)
+			continue
 
 		auto_reconnect = True
 

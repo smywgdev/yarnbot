@@ -1,0 +1,9 @@
+#!/bin/sh
+
+export RAV_ACC_KEY=''
+export RAV_SEC_KEY=''
+export SLACK_API_KEY=''
+
+nohup python yarnbot.py &
+
+
