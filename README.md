@@ -19,6 +19,20 @@ Yarnbot understands:
  * **info**: Yarnbot info
  * **help**: Help text
 
+## Running
+
+Before anything else will work, you will need to create a bot in Slack. In your team's app management section, create a custom integration and add a bot configuration. The API Token available there is the SLACK_API_KEY referenced below.
+
+Use a script such as the provded example to set the various access keys and run the client. It will try to stay connected to slack until you tell it to `go to sleep`, which will cause it to disconnect gracefully.
+
+Yarnbot will create a log file named `yarnbot.log` in the current directory. By default, it logs at the INFO level, but that can be changed by altering the logging setup at the beginning of `yarnbot.py`.
+
+As it runs, it keeps track of users it has seen, and saves them in `known_users.pkl`. Please note that is a python pickle file.
+
+### Access Tokens
+
+Yarnbot requires a Slack API key, taken from the SLACK_API_KEY environment variable, as well as Ravelry OAuth1 keys, taken from RAV_ACC_KEY and RAV_SEC_KEY.
+
 ## Screenshots
 
 Some typical yarnbot commands
