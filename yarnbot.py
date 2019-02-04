@@ -36,7 +36,7 @@ import logging
 
 USERDB_FILENAME = 'known_users.pkl'
 
-VERSION = '1.8.0'
+VERSION = '1.8.1'
 
 # Ravelry auth info. Set from environment.
 RAV_ACC_KEY = ''
@@ -471,7 +471,7 @@ def ravelry_pattern(rav_cmd):
 		if w in rav_cmd:
 			rav_cmd.remove(w)
 
-	parms = {'photo':'yes', 'page_size':'5', 'sort':'projects'}
+	parms = {'photo':'yes', 'page_size':'5', 'sort':'best'}
 	msg = u'Pattern search results for:'
 	
 	filter_free = 'free' in rav_cmd
