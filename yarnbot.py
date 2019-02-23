@@ -36,7 +36,7 @@ import logging
 
 USERDB_FILENAME = 'known_users.pkl'
 
-VERSION = '1.8.1'
+VERSION = '1.9.0'
 
 # Ravelry auth info. Set from environment.
 RAV_ACC_KEY = ''
@@ -658,7 +658,16 @@ def proc_msg(evt):
 		for w in yarn_weights.keys():
 			reply += "  " + w + "\n"
 
-	
+	elif msg_lower.startswith('welcome '):
+		m = re.match('^welcome <@(u[a-z0-9]+)>', msg_lower)
+		logging.info('Got welcome command: {0} {1}'.format(msg_lower,m))
+
+		if m:
+			to_user_id = m.groups()[0].upper()
+			logging.info('welcome from {0} to {1}'.format(user_id,to_user_id))
+			welcome_msg(to_user_id, user_id)
+			reply = "Welcome message sent!"
+		
 	elif re.match('^[0-9+-/*. ()]+$', msg_stripped):
 		try:
 			reply = '{0}'.format( eval(msg_stripped) )
@@ -914,9 +923,9 @@ def send_direct_msg(user_id, msg):
 
 	send_msg(im_channel, msg)
 
-def welcome_msg(user_id):
+def welcome_msg(user_id, from_user_id=None):
 
-	#logging.info('Sending message to {0}'.format(user_id))
+	logging.info('Sending welcome message from {0} to {1}'.format(from_user_id,user_id))
 	user_info = sc.api_call('users.info', user=user_id)
 
 	try:
@@ -932,7 +941,12 @@ def welcome_msg(user_id):
 	user_name = user_info['user']['name']
 
 	welcome = 'Hello ' + user_name + "!\n"
-	welcome += "I haven't seen you here before, so let me introduce myself.\n"
+
+	if from_user_id is None:
+		welcome += "I haven't seen you here before, so let me introduce myself.\n"
+	else:
+		welcome += "<@{0}> asked me to welcome you again.\n".format(from_user_id)
+
 	welcome += "My name is yarnbot, and I'm here to help. You can talk to me in "
 	welcome += "this direct message, or by starting a message with '@yarnbot'\n"
 	welcome += "Say 'help' to get a list of things I can do."
@@ -985,18 +999,17 @@ def main_loop():
 				if ret == 'quit':
 					please_close = True
 					auto_reconnect = False
-		elif evt_type == u'presence_change':
-			presence = evt[0]['presence']
+		elif evt_type == u'team_join':
 			user = evt[0]['user']
 
-			#logging.info('I saw a presence change: {0}'.format(evt[0]))
-			#logging.info('looking for {0} in known users'.format(user))
-
-			if presence == u'active' and user not in known_users:
-				known_users.append(user)
+			if 'is_bot' in user and user['is_bot']:
+				continue
+				
+			if user['id'] not in known_users:
+				known_users.append(user['id'])
 				save_userdb()
-				#logging.info('Sending welcome message')
-				welcome_msg(user)
+				logging.info('Sending welcome message')
+				welcome_msg(user['id'])
 
 
 
