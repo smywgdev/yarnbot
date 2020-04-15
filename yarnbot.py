@@ -25,6 +25,7 @@ from __future__ import division
 import os
 import sys
 import time
+import string
 import random
 import pickle
 import re
@@ -36,7 +37,7 @@ import logging
 
 USERDB_FILENAME = 'known_users.pkl'
 
-VERSION = '1.9.0'
+VERSION = '1.10.1'
 
 # Ravelry auth info. Set from environment.
 RAV_ACC_KEY = ''
@@ -46,6 +47,10 @@ reconnect_count = 0
 message_count = 0
 unknown_count = 0
 event_count = 0
+
+conversations = dict()
+
+greetings = ["Hi!", "Hello there!", "Hello!", "Greetings, fair yarn worker!"]
 
 unknown_replies = ["I'm not sure what you mean.",
 		   "I'm sorry, I don't know that.",
@@ -280,6 +285,40 @@ mm	UK	US	crochet
 15.0 mm		19	
 20.0 mm		35	
 50.0 mm		50	
+'''
+
+def strip_punc(s):
+	return str(s).translate(None, string.punctuation).strip()
+
+
+'''
+class EaseConversation:
+
+	"Do you have ease or you want to find it out?"
+
+
+
+
+def start_conversation(conf_name, user_id):
+	conv = None
+
+	if conv == 'ease':
+		conv = EaseConversation(user_id)
+
+def continue_conversation(user_id, msg):
+
+	global conversations
+
+	if user_id not in conversations:
+		return 'Hmm, this conversation seems to be over :/'
+
+
+	conv = conversations[user_id]
+
+	reply = conv.step(user_id, msg)
+
+	if reply is None:
+		del conversations[user_id]
 '''
 
 def yarn_distance(yarn1, yarn2):
@@ -547,6 +586,7 @@ def proc_msg(evt):
 	global reconnect_count
 	global unknown_count
 	global event_count
+	global conversations
 
 	reply = None
 
@@ -570,9 +610,24 @@ def proc_msg(evt):
 			text=reply)
 		return None
 
-	if msg_text.startswith(MY_USER):
+	if user_id in conversations:
+		reply, attach = continue_conversation(user_id, msg_text)
+		send_msg(channel_id, reply, attach)
+		return None
+
+	#if msg_text.startswith(MY_USER):
+	if MY_USER in msg_text:
 		direct_msg = True
-		msg_text = msg_text.split('>',1)[1]
+		msg_parts = msg_text.split(MY_USER,1)
+		msg_parts_stripped = map(strip_punc, msg_parts)
+		if len(msg_parts_stripped[1]) > 0:
+			msg_text = msg_parts_stripped[1]
+			msg_orig = msg_parts[1]
+		else:
+			msg_text = msg_parts_stripped[0]
+			msg_orig = msg_parts[0]
+
+		#msg_text = msg_text.split('>',1)[1]
 		if len(msg_text) <= 0:
 			return None
 		if not msg_text[0].isalnum():
@@ -584,7 +639,9 @@ def proc_msg(evt):
 	msg_lower = msg_text.lower()
 	msg_stripped = str(msg_lower).translate(None, '.,!?:;')
 
-	if acronyms.has_key(msg_stripped):
+	if 'ease' in msg_stripped:
+		reply = start_conversation('ease',user_id)
+	elif acronyms.has_key(msg_stripped):
 		reply = "*{0}* is {1}".format(msg_text, acronyms[msg_stripped]['desc'])
 		if acronyms[msg_stripped]['url'] != None:
 			reply += "\n<{0}|more info>".format(acronyms[msg_stripped]['url'])
@@ -668,9 +725,9 @@ def proc_msg(evt):
 			welcome_msg(to_user_id, user_id)
 			reply = "Welcome message sent!"
 		
-	elif re.match('^[0-9+-/*. ()]+$', msg_stripped):
+	elif re.match('^[0-9+-/*. ()]+$', msg_orig.strip()):
 		try:
-			reply = '{0}'.format( eval(msg_stripped) )
+			reply = '{0}'.format( eval(msg_orig.strip()) )
 		except:
 			reply = "Arithmetic evaluation error"
 
@@ -848,7 +905,10 @@ def proc_msg(evt):
 			logging.warn('Ravelry error line {0}: {1}'.format(sys.exc_info()[2].tb_lineno,e.message) )
 
 	elif msg_stripped == 'hello' or msg_stripped == 'hi' or msg_stripped.startswith('hello ') or msg_stripped.startswith('hi '):
-		reply = "Hi!"
+		reply_ind = random.choice( range(len(greetings)) )
+		reply = greetings[reply_ind]
+	elif msg_stripped.startswith('good') and (msg_stripped.endswith('morning') or msg_stripped.endswith('afternoon') or msg_stripped.endswith('night') or msg_stripped.endswith('evening')):
+		reply = ':kissing_heart:'
 	elif msg_stripped == 'info':
 		reply = "I'm yarnbot {0}, started on {1}.\n".format(VERSION, time.ctime(start_time))
 		reply += "I've processed {0} events, {1} messages ({2} unknown), and had to reconnect {3} times.".format(event_count, message_count, unknown_count, reconnect_count)
