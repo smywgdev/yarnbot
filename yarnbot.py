@@ -1,7 +1,7 @@
 '''
     Yarnbot - Slack bot for yarn working
 
-    Copyright (C) 2017  Nigel D. Stepp
+    Copyright (C) 2017	Nigel D. Stepp
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -34,10 +34,11 @@ import requests
 from slackclient import SlackClient
 import logging
 
+from conversations import EaseConversation
 
 USERDB_FILENAME = 'known_users.pkl'
 
-VERSION = '1.10.1'
+VERSION = '1.12.0'
 
 # Ravelry auth info. Set from environment.
 RAV_ACC_KEY = ''
@@ -127,17 +128,17 @@ acronyms = {
 	'yon': {'desc': 'yarn over needle', 'url': None}}
 
 yarn_weights = {
-	'cobweb':          {'ply': 1, 'wpi': '??', 'gauge': '??', 'number': 0},
-	'lace':            {'ply': 2, 'wpi': '??', 'gauge': '32-34', 'number': 0},
+	'cobweb':	   {'ply': 1, 'wpi': '??', 'gauge': '??', 'number': 0},
+	'lace':		   {'ply': 2, 'wpi': '??', 'gauge': '32-34', 'number': 0},
 	'light fingering': {'ply': 3, 'wpi': '??', 'gauge': '32', 'number': 0},
-	'fingering':       {'ply': 4, 'wpi': '14', 'gauge': '28', 'number': 1},
-	'sport':           {'ply': 5, 'wpi': '12', 'gauge': '24-26', 'number': 2},
-	'dk':              {'ply': 8, 'wpi': '11', 'gauge': '22', 'number': 3},
-	'worsted':         {'ply': 10, 'wpi': '9', 'gauge': '20', 'number': 4},
-	'aran':            {'ply': 10, 'wpi': '8', 'gauge': '18', 'number': 4},
-	'bulky':           {'ply': 12, 'wpi': '7', 'gauge': '14-15', 'number': 5},
-	'super bulky':     {'ply': '??', 'wpi': '5-6', 'gauge': '7-12', 'number': 6},
-	'jumbo':           {'ply': '??', 'wpi': '0-4', 'gauge': '0-6', 'number': 7}
+	'fingering':	   {'ply': 4, 'wpi': '14', 'gauge': '28', 'number': 1},
+	'sport':	   {'ply': 5, 'wpi': '12', 'gauge': '24-26', 'number': 2},
+	'dk':		   {'ply': 8, 'wpi': '11', 'gauge': '22', 'number': 3},
+	'worsted':	   {'ply': 10, 'wpi': '9', 'gauge': '20', 'number': 4},
+	'aran':		   {'ply': 10, 'wpi': '8', 'gauge': '18', 'number': 4},
+	'bulky':	   {'ply': 12, 'wpi': '7', 'gauge': '14-15', 'number': 5},
+	'super bulky':	   {'ply': '??', 'wpi': '5-6', 'gauge': '7-12', 'number': 6},
+	'jumbo':	   {'ply': '??', 'wpi': '0-4', 'gauge': '0-6', 'number': 7}
 	}
 
 yarn_fibers = [
@@ -291,35 +292,47 @@ def strip_punc(s):
 	return str(s).translate(None, string.punctuation).strip()
 
 
-'''
-class EaseConversation:
+def start_conversation(conv_name, user_id):
+	global conversations
 
-	"Do you have ease or you want to find it out?"
-
-
-
-
-def start_conversation(conf_name, user_id):
 	conv = None
 
-	if conv == 'ease':
-		conv = EaseConversation(user_id)
+	if conv_name == 'ease':
+		conv = EaseConversation()
+
+	if conv is None:
+		return "Something funny happened trying to start a conversation :/"
+
+
+	msg = "Starting a conversation with yarnbot, just say 'cancel' to cancel\n"
+	(reply,terminal) = conv.step()
+
+	if not terminal:
+		conversations[user_id] = conv
+
+	if reply is not None:
+		msg += reply
+
+	return msg
 
 def continue_conversation(user_id, msg):
-
 	global conversations
+
+	if msg == 'cancel':
+		del conversations[user_id]
+		return 'Ok, conversation canceled'
 
 	if user_id not in conversations:
 		return 'Hmm, this conversation seems to be over :/'
 
-
 	conv = conversations[user_id]
 
-	reply = conv.step(user_id, msg)
+	(reply,terminal) = conv.step(msg)
 
-	if reply is None:
+	if reply is None or terminal:
 		del conversations[user_id]
-'''
+	
+	return reply
 
 def yarn_distance(yarn1, yarn2):
 
@@ -611,8 +624,9 @@ def proc_msg(evt):
 		return None
 
 	if user_id in conversations:
-		reply, attach = continue_conversation(user_id, msg_text)
-		send_msg(channel_id, reply, attach)
+		reply = continue_conversation(user_id, msg_text)
+		if reply is not None:
+			send_msg(channel_id, reply)
 		return None
 
 	#if msg_text.startswith(MY_USER):
@@ -632,6 +646,8 @@ def proc_msg(evt):
 			return None
 		if not msg_text[0].isalnum():
 			msg_text = msg_text[1:].strip()
+	else:
+		msg_orig = msg_text
 
 	if not direct_msg:
 		return None
@@ -639,7 +655,7 @@ def proc_msg(evt):
 	msg_lower = msg_text.lower()
 	msg_stripped = str(msg_lower).translate(None, '.,!?:;')
 
-	if 'ease' in msg_stripped:
+	if 'ease' in msg_stripped and 'help' in msg_stripped:
 		reply = start_conversation('ease',user_id)
 	elif acronyms.has_key(msg_stripped):
 		reply = "*{0}* is {1}".format(msg_text, acronyms[msg_stripped]['desc'])
