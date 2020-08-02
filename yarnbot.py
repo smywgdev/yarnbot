@@ -38,7 +38,7 @@ from conversations import EaseConversation
 
 USERDB_FILENAME = 'known_users.pkl'
 
-VERSION = '1.12.2'
+VERSION = '1.12.3'
 
 # Ravelry auth info. Set from environment.
 RAV_ACC_KEY = ''
@@ -668,6 +668,7 @@ def proc_msg(evt):
         reply += "  Needle/Hook sizes (say 'US 10', '5mm', 'Crochet L', etc)\n"
         reply += "  Basic arithmetic expressions\n"
         reply += "  *weights*: List all yarn weights\n"
+        reply += "  *needles* or *hooks*: List all needles/hooks\n"
         reply += "  *ravelry favorites* &lt;Ravelry Username&gt;\n"
         reply += "  *ravelry favorites* &lt;Ravelry Username&gt; *tagged* &lt;tag&gt;\n"
         reply += "  *ravelry search* &lt;search terms&gt;: Search patterns\n"
@@ -726,10 +727,21 @@ def proc_msg(evt):
                         needles_by_crochet[size]['uk'])
             else:
                 reply = "Crochet {0} doesn't seem to be a standard size.".format(size)
+
     elif msg_stripped == 'weights':
         reply = "These are all of the yarn weights I know about:\n"
-        for w in yarn_weights.keys():
-            reply += "  " + w + "\n"
+        for w in sorted(yarn_weights.keys(),key=lambda x: yarn_weights[x]['number']):
+            reply += "  *{0}*: {1} ply, {2} wpi, {3} per 4 in. typical gauge, number {4}\n".format(w,
+                     yarn_weights[w]['ply'],yarn_weights[w]['wpi'],yarn_weights[w]['gauge'],
+                     yarn_weights[w]['number'])
+
+    elif msg_stripped == 'needles' or msg_stripped == 'hooks':
+        reply = "These are all of the needles/hooks I know about:\n"
+        for size in sorted(needles_by_metric.keys(),key=float):
+            reply += "*{0} mm* needles/hooks are US {1}, UK {2}, Crochet {3}\n".format(size,
+                    needles_by_metric[size]['us'],
+                    needles_by_metric[size]['uk'],
+                    needles_by_metric[size]['crochet'])
 
     elif msg_lower.startswith('welcome '):
         m = re.match('^welcome <@(u[a-z0-9]+)>', msg_lower)
@@ -740,7 +752,14 @@ def proc_msg(evt):
             logging.info('welcome from {0} to {1}'.format(user_id,to_user_id))
             welcome_msg(to_user_id, user_id)
             reply = "Welcome message sent!"
-        
+
+    elif msg_stripped == 'runningconversations':
+        try:
+            convs = [ u + ': ' + c.label for (u,c) in conversations.items() ]
+            reply = '\n'.join(convs)
+        except:
+            reply = "Couldn't list conversations"
+
     elif re.match('^[0-9+-/*. ()]+$', msg_orig.strip()):
         try:
             reply = '{0}'.format( eval(msg_orig.strip()) )
