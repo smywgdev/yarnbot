@@ -38,7 +38,7 @@ from conversations import EaseConversation
 
 USERDB_FILENAME = 'known_users.pkl'
 
-VERSION = '1.12.1'
+VERSION = '1.12.2'
 
 # Ravelry auth info. Set from environment.
 RAV_ACC_KEY = ''

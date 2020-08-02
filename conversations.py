@@ -49,7 +49,7 @@ def extract_numeric(data, msg):
     if result is not None:
         return float(result.group(0))
 
-class State:
+class State(object):
     '''
     A single state within a state machine.
     '''
@@ -167,7 +167,7 @@ class State:
         #print(f'<<<<< Transition to {state.label}')
         return state
 
-class Conversation:
+class Conversation(object):
     '''
     A conversation is a state machine in which states emit a message upon entering,
     process a response to that message, and then choose an appropriate next state.
@@ -265,7 +265,7 @@ class EaseConversation(Conversation):
         return float(data['stitches'])/(data['gauge']/4.) - data['meas']
 
     def __init__(self):
-        super().__init__('ease')
+        super(EaseConversation,self).__init__('ease')
 
         self.states = {
             'init': State('init', 'Do you have your ease or want to find it?'),
