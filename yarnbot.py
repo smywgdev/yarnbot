@@ -20,7 +20,7 @@
     Nigel Stepp <stepp@atistar.net>
 '''
 
-from __future__ import division
+#from __future__ import division
 
 import os
 import sys
@@ -31,14 +31,15 @@ import pickle
 import re
 import json
 import requests
-from slackclient import SlackClient
 import logging
+
+from slack_bolt import App
 
 from conversations import EaseConversation
 
 USERDB_FILENAME = 'known_users.pkl'
 
-VERSION = '1.12.3'
+VERSION = '2.0.0-alpha'
 
 # Ravelry auth info. Set from environment.
 RAV_ACC_KEY = ''
@@ -288,8 +289,13 @@ mm  UK  US  crochet
 50.0 mm     50  
 '''
 
+app = App(
+    token=os.environ.get("SLACK_BOT_TOKEN"),
+    signing_secret=os.environ.get("SLACK_SIGNING_SECRET")
+)
+
 def strip_punc(s):
-    return str(s).translate(None, string.punctuation).strip()
+    return str(s).translate(str.maketrans('','', string.punctuation)).strip()
 
 
 def start_conversation(conv_name, user_id):
@@ -478,7 +484,7 @@ def ravelry_yarn(rav_cmd):
         else:
             organic = 'Yes'
 
-        if info.has_key('yarn_weight'):
+        if 'yarn_weight' in info:
             description = info['yarn_weight']['name']
         else:
             description = u'roving?'
@@ -592,8 +598,8 @@ def ravelry_pattern(rav_cmd):
 
     return (msg,attach_json)
 
-
-def proc_msg(evt):
+@app.event('message')
+def proc_msg(event, say, client):
 
     global message_count
     global reconnect_count
@@ -603,9 +609,8 @@ def proc_msg(evt):
 
     reply = None
 
-    if evt.has_key('subtype'):
-        return None
-    
+    evt = event
+
     user_id = evt['user']
     channel_id = evt['channel']
     msg_text = evt['text']
@@ -616,24 +621,20 @@ def proc_msg(evt):
     direct_msg = channel_id.startswith('D')
 
     if ':sheep:' in msg_text:
-        reply = "Did someone say :sheep:?"
-        sc.api_call("chat.postMessage",
-            channel=channel_id,
-            as_user=True,
-            text=reply)
+        say("Did someone say :sheep:?")
         return None
 
     if user_id in conversations:
         reply = continue_conversation(user_id, msg_text)
         if reply is not None:
-            send_msg(channel_id, reply)
+            say(reply)
         return None
 
     #if msg_text.startswith(MY_USER):
     if MY_USER in msg_text:
         direct_msg = True
         msg_parts = msg_text.split(MY_USER,1)
-        msg_parts_stripped = map(strip_punc, msg_parts)
+        msg_parts_stripped = [strip_punc(m) for m in msg_parts]
         if len(msg_parts_stripped[1]) > 0:
             msg_text = msg_parts_stripped[1]
             msg_orig = msg_parts[1]
@@ -653,11 +654,11 @@ def proc_msg(evt):
         return None
 
     msg_lower = msg_text.lower()
-    msg_stripped = str(msg_lower).translate(None, '.,!?:;')
+    msg_stripped = str(msg_lower).translate(str.maketrans('','','.,!?:;'))
 
     if 'ease' in msg_stripped and 'help' in msg_stripped:
         reply = start_conversation('ease',user_id)
-    elif acronyms.has_key(msg_stripped):
+    elif msg_stripped in acronyms:
         reply = "*{0}* is {1}".format(msg_text, acronyms[msg_stripped]['desc'])
         if acronyms[msg_stripped]['url'] != None:
             reply += "\n<{0}|more info>".format(acronyms[msg_stripped]['url'])
@@ -676,7 +677,7 @@ def proc_msg(evt):
         reply += "  *ravelry yarn similar to* &lt;search terms&gt;: Find similar yarn\n"
         reply += "  *info*: Yarnbot info\n"
         reply += "  *help*: This text"
-    elif yarn_weights.has_key(msg_stripped):
+    elif msg_stripped in yarn_weights:
         yarn_info = yarn_weights[msg_stripped]
         reply = "*{0}* weight yarn is number {1}, typically {2} stitches per 4 in., {3}-ply, {4} wraps per inch".format(msg_stripped,
             yarn_info['number'],
@@ -687,7 +688,7 @@ def proc_msg(evt):
         m = re.match('^us ([0-9.]+)', msg_lower)
         if m:
             size = m.groups()[0]
-            if needles_by_us.has_key(size):
+            if size in needles_by_us:
                 reply = "*US size {0}* is {1} mm, UK {2}, Crochet {3}".format(size,
                         needles_by_us[size]['metric'],
                         needles_by_us[size]['uk'],
@@ -698,7 +699,7 @@ def proc_msg(evt):
         m = re.match('^uk ([0-9.]+)', msg_lower)
         if m:
             size = m.groups()[0]
-            if needles_by_uk.has_key(size):
+            if size in needles_by_uk:
                 reply = "*UK size {0}* is {1} mm, US {2}, Crochet {3}".format(size,
                         needles_by_uk[size]['metric'],
                         needles_by_uk[size]['us'],
@@ -709,7 +710,7 @@ def proc_msg(evt):
         m = re.match('^([0-9.]+) *mm', msg_lower)
         if m:
             size = "{0:.2f}".format(float(m.groups()[0]))
-            if needles_by_metric.has_key(size):
+            if size in needles_by_metric:
                 reply = "*{0} mm* needles/hooks are US {1}, UK {2}, Crochet {3}".format(size,
                         needles_by_metric[size]['us'],
                         needles_by_metric[size]['uk'],
@@ -720,7 +721,7 @@ def proc_msg(evt):
         m = re.match('^crochet ([a-z])', msg_lower)
         if m:
             size = m.groups()[0].upper()
-            if needles_by_crochet.has_key(size):
+            if size in needles_by_crochet:
                 reply = "*Crochet {0}* is {1} mm, US {2}, UK {3}".format(size,
                         needles_by_crochet[size]['metric'],
                         needles_by_crochet[size]['us'],
@@ -789,11 +790,11 @@ def proc_msg(evt):
                     reply += ' too many for a good comparison. Try adding more search terms'
                     reply += ' (especially weight and fiber), or add "force" to your search'
                     reply += ', which will just pick the top result.'
-                    send_msg(channel_id, reply)
+                    say(reply)
                     return None
                 elif num_yarns < 1:
                     reply = "That yarn description didn't return any results :disappointed:"
-                    send_msg(channel_id, reply)
+                    say(reply)
                     return None
 
                 target_yarn = target_results['yarns'][0]
@@ -808,7 +809,7 @@ def proc_msg(evt):
 
                 if similar_results['paginator']['results'] < 1:
                     reply = 'No results.... somehow'
-                    send_msg(channel_id, reply)
+                    say(reply)
                     return None
 
                 # Sort results by yarn comparison
@@ -860,7 +861,7 @@ def proc_msg(evt):
                 msg = u"Yarn most similar to {0} {1} {2}-weight ({3})".format(target_yarn['yarn_company_name'],target_yarn['name'],target_weight,','.join(target_fibers))
                 attach_json = json.dumps( attachments )
 
-                send_msg(channel_id, msg, attach_json)
+                send_msg(client, channel_id, msg, attach_json)
 
                 return None
 
@@ -869,9 +870,9 @@ def proc_msg(evt):
                 (msg, attach) = ravelry_yarn(rav_cmd[2:])
 
                 if msg != None:
-                    send_msg(channel_id, msg, attach)
+                    send_msg(client, channel_id, msg, attach)
                 else:
-                    send_msg(channel_id, ':disappointed:')
+                    say(':disappointed:')
 
                 return None
 
@@ -881,9 +882,9 @@ def proc_msg(evt):
                 (msg, attach) = ravelry_pattern(rav_cmd[2:])
 
                 if msg != None:
-                    send_msg(channel_id, msg, attach)
+                    send_msg(client, channel_id, msg, attach)
                 else:
-                    send_msg(channel_id, ':disappointed:')
+                    say(':disappointed:')
 
                 return None
 
@@ -902,7 +903,7 @@ def proc_msg(evt):
                 rav_result = ravelry_api('/people/{0}/favorites/list.json'.format(fav_user), parms)
 
                 if rav_result['paginator']['results'] == 0:
-                    send_msg(channel_id, ':disappointed:')
+                    say(':disappointed:')
                     return None
 
                 attachments = []
@@ -928,8 +929,7 @@ def proc_msg(evt):
 
                 attach_json = json.dumps( attachments )
 
-                sc.api_call("chat.postMessage",
-                    channel=channel_id,
+                client.chat_postMessage(channel=channel_id,
                     as_user=True,
                     text=msg,
                     attachments=attach_json)
@@ -949,11 +949,7 @@ def proc_msg(evt):
         reply += "I've processed {0} events, {1} messages ({2} unknown), and had to reconnect {3} times.".format(event_count, message_count, unknown_count, reconnect_count)
     elif msg_text == 'go to sleep':
         logging.warn('Got kill message')
-        reply = "Ok, bye."
-        sc.api_call("chat.postMessage",
-            channel=channel_id,
-            as_user=True,
-            text=reply)
+        say("Ok, bye.")
         return 'quit'
     elif ('love' in msg_lower) or ('cute' in msg_lower) or ('best' in msg_lower) or ('awesome' in msg_lower) or ('great' in msg_lower):
         reply = ":blush:"
@@ -967,29 +963,19 @@ def proc_msg(evt):
         reply = unknown_replies[reply_ind]
         unknown_count += 1
 
-    send_msg(channel_id, reply)
+    say(reply)
 
     return None
 
-def send_msg(channel_id, msg):
-
-    #logging.info('Sending a message to {0}: {1}'.format(channel_id, msg))
-    sc.api_call("chat.postMessage",
-        channel=channel_id,
-        as_user=True,
-        text=msg)
-
-def send_msg(channel_id, msg, attach=None):
+def send_msg(client, channel_id, msg, attach=None):
 
     #logging.info('Sending a message to {0}: {1}'.format(channel_id, msg))
     if attach == None:
-        sc.api_call("chat.postMessage",
-            channel=channel_id,
+        client.chat_postMessage(channel=channel_id,
             as_user=True,
             text=msg)
     else:
-        sc.api_call("chat.postMessage",
-            channel=channel_id,
+        client.chat_postMessage(channel=channel_id,
             as_user=True,
             text=msg,
             attachments=attach)
@@ -997,15 +983,15 @@ def send_msg(channel_id, msg, attach=None):
 
 
 
-def send_direct_msg(user_id, msg):
+def send_direct_msg(client, user_id, msg):
 
     #send_msg(user_id, msg)
     #return
 
-    im = sc.api_call('im.open', user=user_id)
+    im = client.im.open(user_id)
 
     try:
-        if not im.has_key('ok') or not im['ok']:
+        if not 'ok' in im or not im['ok']:
             logging.warn('im open failed')
             return
     except:
@@ -1016,15 +1002,15 @@ def send_direct_msg(user_id, msg):
     
     im_channel = im['channel']['id']
 
-    send_msg(im_channel, msg)
+    send_msg(client, im_channel, msg)
 
-def welcome_msg(user_id, from_user_id=None):
+def welcome_msg(client, user_id, from_user_id=None):
 
     logging.info('Sending welcome message from {0} to {1}'.format(from_user_id,user_id))
-    user_info = sc.api_call('users.info', user=user_id)
+    user_info = client.user_info(user_id)
 
     try:
-        if not user_info.has_key('ok') or not user_info['ok']:
+        if not 'ok' in user_info or not user_info['ok']:
             logging.warn('Error getting user info')
             return
     except:
@@ -1046,8 +1032,9 @@ def welcome_msg(user_id, from_user_id=None):
     welcome += "this direct message, or by starting a message with '@yarnbot'\n"
     welcome += "Say 'help' to get a list of things I can do."
 
-    send_direct_msg(user_id, welcome)
+    send_direct_msg(client, user_id, welcome)
 
+'''
 def main_loop():
 
     global reconnect_count
@@ -1104,13 +1091,30 @@ def main_loop():
                 known_users.append(user['id'])
                 save_userdb()
                 logging.info('Sending welcome message')
-                welcome_msg(user['id'])
+                welcome_msg(say, user['id'])
 
 
 
     logging.info('Main loop exiting')
 
     return auto_reconnect
+'''
+
+@app.event('team_join')
+def welcome_user(event, client):
+    global known_users
+
+    user = event['user']
+
+    if 'is_bot' in user and user['is_bot']:
+        return
+        
+    if user['id'] not in known_users:
+        known_users.append(user['id'])
+        save_userdb()
+        logging.info('Sending welcome message')
+        welcome_msg(client, user['id'])
+
 
 def load_userdb():
     global known_users
@@ -1144,8 +1148,6 @@ def save_userdb():
     userdb_file.close()
 
     
-
-
 if __name__ == '__main__':
     logging.basicConfig(filename='yarnbot.log',level=logging.INFO)
     
@@ -1154,10 +1156,10 @@ if __name__ == '__main__':
 
     start_time = time.time()
 
-    SLACK_API_KEY = os.environ.get('SLACK_API_KEY')
-    sc = SlackClient(SLACK_API_KEY)
+    #SLACK_API_KEY = os.environ.get('SLACK_API_KEY')
+    #sc = SlackClient(SLACK_API_KEY)
 
-    auth_info = sc.api_call('auth.test')
+    auth_info = app.client.auth_test()
 
     MY_USER_ID = auth_info['user_id']
 
@@ -1168,6 +1170,9 @@ if __name__ == '__main__':
 
     load_userdb()
 
+    app.start()
+
+    '''
     finished = False
 
     while not finished:
@@ -1210,4 +1215,5 @@ if __name__ == '__main__':
     
         logging.info("Waiting to try reconnecting to RTM")
         time.sleep(10)
+    '''
 
