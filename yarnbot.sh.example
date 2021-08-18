@@ -2,8 +2,9 @@
 
 export RAV_ACC_KEY=''
 export RAV_SEC_KEY=''
-export SLACK_API_KEY=''
+export SLACK_SIGNING_SECRET=''
+export SLACK_BOT_TOKEN=''
 
-nohup python yarnbot.py &
+nohup python3 yarnbot.py &
 
 
