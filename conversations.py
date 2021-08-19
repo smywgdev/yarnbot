@@ -21,40 +21,53 @@
 '''
 
 import re
+from typing import (Any, Callable, Dict, List, Optional,
+    Tuple, TypeVar, TypedDict)
 
+T = TypeVar('T')
+U = TypeVar('U')
+
+ExtractionFn = Callable[[Dict[str,T],str], U]
+AcceptFn = Callable[[str], bool]
+Transition = TypedDict('Transition', {'state': 'State', 'accept': AcceptFn})
 
 # Accept functions
-def accept_string(s):
+def accept_string(s: str) -> AcceptFn:
     return lambda m: s.lower() in m.lower()
 
-def accept_any_strings(*ss):
-    return lambda m: any([ s.lower() in m.lower() for s in ss])
+def accept_any_strings(*ss: str) -> AcceptFn:
+    return lambda m: any(s.lower() in m.lower() for s in ss)
 
-def accept_all_strings(*ss):
-    return lambda m: all([ s.lower() in m.lower() for s in ss])
+def accept_all_strings(*ss: str) -> AcceptFn:
+    return lambda m: all(s.lower() in m.lower() for s in ss)
 
-def accept():
+def accept() -> AcceptFn:
     return lambda _: True
 
 # Extract functions
-def extract_integer(data, msg):
+def extract_integer(_data: Dict[str,T], msg: str) -> Optional[int]:
     result = re.search('(-?[0-9]+)', msg)
 
     if result is not None:
         return int(result.group(0))
 
-def extract_numeric(data, msg):
-    result = re.search('(-?[0-9]+\.?[0-9]*|[0-9]*\.?[0-9]+)', msg)
+    return None
+
+def extract_numeric(_data: Dict[str,T], msg: str) -> Optional[float]:
+    result = re.search(r'(-?[0-9]+\.?[0-9]*|[0-9]*\.?[0-9]+)', msg)
 
     if result is not None:
         return float(result.group(0))
 
-class State(object):
+    return None
+
+class State:
     '''
     A single state within a state machine.
     '''
 
-    def __init__(self, label, msg=None, extract_dict=None):
+    def __init__(self, label: str, msg:Optional[str]=None,
+            extract_dict:Optional[Dict[str,ExtractionFn]]=None):
         '''
         Parameters:
             label: State name
@@ -63,22 +76,23 @@ class State(object):
                 how they should show up in the conversation data dictionary
         '''
         self.label = label
-        self.msg = msg
-        self.extract_dict = extract_dict
-        self.trans = []
+        self.msg = msg if msg is not None else ''
+        self.trans: List[Transition] = []
 
         self.terminal = True
 
-        if self.extract_dict is None:
+        if extract_dict is None:
             self.extract_dict = dict()
-    
-    def set_message(self, msg):
+        else:
+            self.extract_dict = extract_dict
+
+    def set_message(self, msg: str):
         '''
         The emit message can be altered, or set if not set during state construction.
         '''
         self.msg = msg
 
-    def add_trans(self, to_state, accept_fn):
+    def add_trans(self, to_state: State, accept_fn: AcceptFn):
         '''
         Create a transition from this state to another.
 
@@ -89,8 +103,8 @@ class State(object):
         '''
         self.trans.append( {'state':to_state, 'accept':accept_fn} )
         self.terminal = False
-    
-    def extract(self, data, resp):
+
+    def extract(self, data: Dict[str,T], resp: str):
         '''
         Given response text, extract data from it and update the provided
         data dictionary.
@@ -105,7 +119,7 @@ class State(object):
 
         data.update(extracted_data)
 
-    def enter(self, data):
+    def enter(self, data: Dict[str,T]) -> Tuple[str,Dict[str,T]]:
         '''
         Enter a state. Upon entering, the state message is emitted.
 
@@ -117,7 +131,7 @@ class State(object):
         '''
         #print(f'>>>>> Entering {self.label} with {data}')
         if self.terminal:
-            self.extract(data,None)
+            self.extract(data,'')
             msg = self.msg.format(**data)
             return (msg,data)
 
@@ -126,7 +140,7 @@ class State(object):
         #print(f'>>>>> Responding with {prompt}')
         return (prompt,data)
 
-    def process(self, resp, data):
+    def process(self, resp: str, data: Dict[str,T]) -> Dict[str,T]:
         '''
         Process the response message.
 
@@ -145,7 +159,7 @@ class State(object):
         #print(f'***** Extracted {data}')
         return data
 
-    def exit(self, resp):
+    def exit(self, resp: str) -> Optional[State]:
         '''
         Given response text, choose next state.
 
@@ -167,7 +181,7 @@ class State(object):
         #print(f'<<<<< Transition to {state.label}')
         return state
 
-class Conversation(object):
+class Conversation:
     '''
     A conversation is a state machine in which states emit a message upon entering,
     process a response to that message, and then choose an appropriate next state.
@@ -189,13 +203,13 @@ class Conversation(object):
     references to `self.data` as if being passed to `str.format` (which it is).
     '''
 
-    def __init__(self, name):
+    def __init__(self, name: str):
         self.name = name
         self.states = {'init': State('init', 'Subclass to have a real conversation')}
-        self.current_state = self.states['init']
-        self.data = dict()
+        self.current_state: Optional[State] = self.states['init']
+        self.data: Dict[str,Any] = dict()
 
-    def step(self, input_msg=None):
+    def step(self, input_msg: str) -> Optional[Tuple[str,bool]]:
         '''
         Run the machine to the next sttate. `input_msg` is passed to both
         `State.process` and `State.exit`.
@@ -241,7 +255,7 @@ class EaseConversation(Conversation):
 
     # Ease calculations
     @staticmethod
-    def calc_sts(data, msg):
+    def calc_sts(data: Dict[str,float], _msg: str) -> float:
         '''
         Calculate number of stitches using values for gauge, pattern measurement and ease.
         sts = (gauge/4)*(meas+ease)
@@ -249,7 +263,7 @@ class EaseConversation(Conversation):
         return (data['gauge']/4.)*(data['meas']+data['ease'])
 
     @staticmethod
-    def calc_gauge(data, msg):
+    def calc_gauge(data: Dict[str,float], _msg: str) -> float:
         '''
         Calculate gauge using values for stitches, pattern measurement and ease.
         gauge = (4*sts)/(meas+ease)
@@ -257,7 +271,7 @@ class EaseConversation(Conversation):
         return 4.0*float(data['stitches'])/(data['meas']+data['ease'])
 
     @staticmethod
-    def calc_ease(data, msg):
+    def calc_ease(data: Dict[str,float], _msg: str) -> float:
         '''
         Calculate ease using values for stitches, pattern measurement and gauge.
         ease = sts/(gauge/4-meas)
@@ -265,7 +279,7 @@ class EaseConversation(Conversation):
         return float(data['stitches'])/(data['gauge']/4.) - data['meas']
 
     def __init__(self):
-        super(EaseConversation,self).__init__('ease')
+        super().__init__('ease')
 
         self.states = {
             'init': State('init', 'Do you have your ease or want to find it?'),
