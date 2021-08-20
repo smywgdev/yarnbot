@@ -541,72 +541,6 @@ def welcome_msg(client, user_id, from_user_id=None):
 
     send_direct_msg(client, user_id, welcome)
 
-'''
-def main_loop():
-
-    global reconnect_count
-    global message_count
-    global event_count
-
-    please_close = False
-    auto_reconnect = True
-
-    while not please_close:
-        try:
-            evt = sc.rtm_read()
-        except:
-            logging.warn('Excepting on rtm read')
-            while True:
-                logging.warn('Trying to reconnect')
-                if sc.rtm_connect():
-                    break
-                time.sleep(1)
-            reconnect_count += 1
-            evt = []
-
-        if len(evt) <= 0:
-            time.sleep(1)
-            continue
-
-        event_count += 1
-
-        if evt[0].has_key('type'):
-            evt_type = evt[0]['type']
-        else:
-            logging.info("Got no-type event: {0}".format(evt[0]))
-            continue
-
-        if evt_type != u'reconnect_url':
-            logging.info("Got event {0}".format(evt[0]))
-
-        if evt_type == u'goodbye':
-            please_close = True
-        elif evt_type == u'message':
-            ret = proc_msg(evt[0])
-            message_count += 1
-            if ret != None:
-                if ret == 'quit':
-                    please_close = True
-                    auto_reconnect = False
-        elif evt_type == u'team_join':
-            user = evt[0]['user']
-
-            if 'is_bot' in user and user['is_bot']:
-                continue
-                
-            if user['id'] not in known_users:
-                known_users.append(user['id'])
-                save_userdb()
-                logging.info('Sending welcome message')
-                welcome_msg(say, user['id'])
-
-
-
-    logging.info('Main loop exiting')
-
-    return auto_reconnect
-'''
-
 @app.event('team_join')
 def welcome_user(event, client):
     global known_users
@@ -654,8 +588,10 @@ def save_userdb():
     
     userdb_file.close()
 
-    
-if __name__ == '__main__':
+def main():
+    global app
+    global known_users
+
     logging.basicConfig(filename='yarnbot.log',level=logging.INFO)
     
     start_time = time.time()
@@ -672,4 +608,7 @@ if __name__ == '__main__':
     load_userdb()
 
     app.start()
+
+if __name__ == '__main__':
+    main()
 
