@@ -41,7 +41,7 @@ from .ravelry import (ravelry_api, ravelry_api_yarn,
 
 USERDB_FILENAME = 'known_users.pkl'
 
-VERSION = '2.0.0-alpha'
+VERSION = '2.0.1-alpha'
 
 # Ravelry auth info. Set from environment.
 RAV_ACC_KEY = ''
@@ -137,7 +137,6 @@ def proc_msg(event, say, client):
             say(reply)
         return None
 
-    #if msg_text.startswith(MY_USER):
     if MY_USER in msg_text:
         direct_msg = True
         msg_parts = msg_text.split(MY_USER,1)
@@ -149,7 +148,6 @@ def proc_msg(event, say, client):
             msg_text = msg_parts_stripped[0]
             msg_orig = msg_parts[0]
 
-        #msg_text = msg_text.split('>',1)[1]
         if len(msg_text) <= 0:
             return None
         if not msg_text[0].isalnum():
@@ -165,10 +163,10 @@ def proc_msg(event, say, client):
 
     if 'ease' in msg_stripped and 'help' in msg_stripped:
         reply = start_conversation('ease',user_id)
-    elif msg_stripped in acronyms:
-        reply = "*{0}* is {1}".format(msg_text, acronyms[msg_stripped]['desc'])
-        if acronyms[msg_stripped]['url'] != None:
-            reply += "\n<{0}|more info>".format(acronyms[msg_stripped]['url'])
+    elif msg_stripped in data.acronyms:
+        reply = "*{0}* is {1}".format(msg_text, data.acronyms[msg_stripped]['desc'])
+        if data.acronyms[msg_stripped]['url'] != None:
+            reply += "\n<{0}|more info>".format(data.acronyms[msg_stripped]['url'])
     elif msg_stripped == 'help':
         reply = "I understand:\n"
         reply += "  &lt;7 character abbreviations\n"
@@ -184,8 +182,8 @@ def proc_msg(event, say, client):
         reply += "  *ravelry yarn similar to* &lt;search terms&gt;: Find similar yarn\n"
         reply += "  *info*: Yarnbot info\n"
         reply += "  *help*: This text"
-    elif msg_stripped in yarn_weights:
-        yarn_info = yarn_weights[msg_stripped]
+    elif msg_stripped in data.yarn_weights:
+        yarn_info = data.yarn_weights[msg_stripped]
         reply = "*{0}* weight yarn is number {1}, typically {2} stitches per 4 in., {3}-ply, {4} wraps per inch".format(msg_stripped,
             yarn_info['number'],
             yarn_info['gauge'],
@@ -195,61 +193,61 @@ def proc_msg(event, say, client):
         m = re.match('^us ([0-9.]+)', msg_lower)
         if m:
             size = m.groups()[0]
-            if size in needles_by_us:
+            if size in data.needles_by_us:
                 reply = "*US size {0}* is {1} mm, UK {2}, Crochet {3}".format(size,
-                        needles_by_us[size]['metric'],
-                        needles_by_us[size]['uk'],
-                        needles_by_us[size]['crochet'])
+                        data.needles_by_us[size]['metric'],
+                        data.needles_by_us[size]['uk'],
+                        data.needles_by_us[size]['crochet'])
             else:
                 reply = "US {0} doesn't seem to be a standard size.".format(size)
     elif msg_lower.startswith('uk '):
         m = re.match('^uk ([0-9.]+)', msg_lower)
         if m:
             size = m.groups()[0]
-            if size in needles_by_uk:
+            if size in data.needles_by_uk:
                 reply = "*UK size {0}* is {1} mm, US {2}, Crochet {3}".format(size,
-                        needles_by_uk[size]['metric'],
-                        needles_by_uk[size]['us'],
-                        needles_by_uk[size]['crochet'])
+                        data.needles_by_uk[size]['metric'],
+                        data.needles_by_uk[size]['us'],
+                        data.needles_by_uk[size]['crochet'])
             else:
                 reply = "UK {0} doesn't seem to be a standard size.".format(size)
     elif re.match('^[0-9.]+ *mm', msg_lower):
         m = re.match('^([0-9.]+) *mm', msg_lower)
         if m:
             size = "{0:.2f}".format(float(m.groups()[0]))
-            if size in needles_by_metric:
+            if size in data.needles_by_metric:
                 reply = "*{0} mm* needles/hooks are US {1}, UK {2}, Crochet {3}".format(size,
-                        needles_by_metric[size]['us'],
-                        needles_by_metric[size]['uk'],
-                        needles_by_metric[size]['crochet'])
+                        data.needles_by_metric[size]['us'],
+                        data.needles_by_metric[size]['uk'],
+                        data.needles_by_metric[size]['crochet'])
             else:
                 reply = "{0} mm doesn't seem to be a standard size.".format(size)
     elif msg_lower.startswith('crochet '):
         m = re.match('^crochet ([a-z])', msg_lower)
         if m:
             size = m.groups()[0].upper()
-            if size in needles_by_crochet:
+            if size in data.needles_by_crochet:
                 reply = "*Crochet {0}* is {1} mm, US {2}, UK {3}".format(size,
-                        needles_by_crochet[size]['metric'],
-                        needles_by_crochet[size]['us'],
-                        needles_by_crochet[size]['uk'])
+                        data.needles_by_crochet[size]['metric'],
+                        data.needles_by_crochet[size]['us'],
+                        data.needles_by_crochet[size]['uk'])
             else:
                 reply = "Crochet {0} doesn't seem to be a standard size.".format(size)
 
     elif msg_stripped == 'weights':
         reply = "These are all of the yarn weights I know about:\n"
-        for w in sorted(yarn_weights.keys(),key=lambda x: yarn_weights[x]['number']):
+        for w in sorted(data.yarn_weights.keys(),key=lambda x: data.yarn_weights[x]['number']):
             reply += "  *{0}*: {1} ply, {2} wpi, {3} per 4 in. typical gauge, number {4}\n".format(w,
-                     yarn_weights[w]['ply'],yarn_weights[w]['wpi'],yarn_weights[w]['gauge'],
-                     yarn_weights[w]['number'])
+                     data.yarn_weights[w]['ply'],yarn_weights[w]['wpi'],yarn_weights[w]['gauge'],
+                     data.yarn_weights[w]['number'])
 
     elif msg_stripped == 'needles' or msg_stripped == 'hooks':
         reply = "These are all of the needles/hooks I know about:\n"
-        for size in sorted(needles_by_metric.keys(),key=float):
+        for size in sorted(data.needles_by_metric.keys(),key=float):
             reply += "*{0} mm* needles/hooks are US {1}, UK {2}, Crochet {3}\n".format(size,
-                    needles_by_metric[size]['us'],
-                    needles_by_metric[size]['uk'],
-                    needles_by_metric[size]['crochet'])
+                    data.needles_by_metric[size]['us'],
+                    data.needles_by_metric[size]['uk'],
+                    data.needles_by_metric[size]['crochet'])
 
     elif msg_lower.startswith('welcome '):
         m = re.match('^welcome <@(u[a-z0-9]+)>', msg_lower)
@@ -447,8 +445,8 @@ def proc_msg(event, say, client):
             logging.warn('Ravelry error line {0}: {1}'.format(sys.exc_info()[2].tb_lineno,e.message) )
 
     elif msg_stripped == 'hello' or msg_stripped == 'hi' or msg_stripped.startswith('hello ') or msg_stripped.startswith('hi '):
-        reply_ind = random.choice( range(len(greetings)) )
-        reply = greetings[reply_ind]
+        reply_ind = random.choice( range(len(data.greetings)) )
+        reply = data.greetings[reply_ind]
     elif msg_stripped.startswith('good') and (msg_stripped.endswith('morning') or msg_stripped.endswith('afternoon') or msg_stripped.endswith('night') or msg_stripped.endswith('evening')):
         reply = ':kissing_heart:'
     elif msg_stripped == 'info':
@@ -463,11 +461,11 @@ def proc_msg(event, say, client):
     elif ('thank you' in msg_lower) or ('thanks' in msg_lower):
         reply = "My pleasure!"
     elif ('tell' in msg_lower and 'joke' in msg_lower) or ('know' in msg_lower and 'jokes' in msg_lower):
-        reply_ind = random.choice( range(len(jokes)) );
+        reply_ind = random.choice( range(len(data.jokes)) );
         reply = jokes[reply_ind]
     else:
-        reply_ind = random.choice( range(len(unknown_replies)) );
-        reply = unknown_replies[reply_ind]
+        reply_ind = random.choice( range(len(data.unknown_replies)) );
+        reply = data.unknown_replies[reply_ind]
         unknown_count += 1
 
     say(reply)
