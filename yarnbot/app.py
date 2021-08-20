@@ -33,7 +33,7 @@ import logging
 
 from slack_bolt import App
 
-from conversations import EaseConversation
+from .conversations import EaseConversation
 
 from . import data
 from .ravelry import (ravelry_api, ravelry_api_yarn,
@@ -76,7 +76,7 @@ def start_conversation(conv_name, user_id):
 
 
     msg = "Starting a conversation with yarnbot, just say 'cancel' to cancel\n"
-    (reply,terminal) = conv.step()
+    (reply,terminal) = conv.step('')
 
     if not terminal:
         conversations[user_id] = conv
