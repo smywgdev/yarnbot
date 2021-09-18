@@ -31,28 +31,18 @@ import json
 import requests
 import logging
 
+from collections import UserDict
+
 from slack_bolt import App
 
 from .conversations import EaseConversation
+from .state import app_state
 
-from . import data
+from . import data, __version__
 from .ravelry import (ravelry_api, ravelry_api_yarn,
     ravelry_pattern, ravelry_yarn, yarn_distance)
 
 USERDB_FILENAME = 'known_users.pkl'
-
-VERSION = '2.0.1-alpha'
-
-# Ravelry auth info. Set from environment.
-RAV_ACC_KEY = ''
-RAV_SEC_KEY = ''
-
-reconnect_count = 0
-message_count = 0
-unknown_count = 0
-event_count = 0
-
-conversations = dict()
 
 app = App(
     token=os.environ.get("SLACK_BOT_TOKEN"),
@@ -64,7 +54,6 @@ def strip_punc(s):
 
 
 def start_conversation(conv_name, user_id):
-    global conversations
 
     conv = None
 
@@ -79,7 +68,7 @@ def start_conversation(conv_name, user_id):
     (reply,terminal) = conv.step('')
 
     if not terminal:
-        conversations[user_id] = conv
+        app_state.conversations[user_id] = conv
 
     if reply is not None:
         msg += reply
@@ -87,32 +76,25 @@ def start_conversation(conv_name, user_id):
     return msg
 
 def continue_conversation(user_id, msg):
-    global conversations
 
     if msg == 'cancel':
-        del conversations[user_id]
+        del app_state.conversations[user_id]
         return 'Ok, conversation canceled'
 
-    if user_id not in conversations:
+    if user_id not in app_state.conversations:
         return 'Hmm, this conversation seems to be over :/'
 
-    conv = conversations[user_id]
+    conv = app_state.conversations[user_id]
 
     (reply,terminal) = conv.step(msg)
 
     if reply is None or terminal:
-        del conversations[user_id]
+        del app_state.conversations[user_id]
     
     return reply
 
 @app.event('message')
 def proc_msg(event, say, client):
-
-    global message_count
-    global reconnect_count
-    global unknown_count
-    global event_count
-    global conversations
 
     reply = None
 
@@ -122,7 +104,7 @@ def proc_msg(event, say, client):
     channel_id = evt['channel']
     msg_text = evt['text']
 
-    if user_id == MY_USER_ID:
+    if user_id == app_state.bot_user_id:
         return None
     
     direct_msg = channel_id.startswith('D')
@@ -131,15 +113,15 @@ def proc_msg(event, say, client):
         say("Did someone say :sheep:?")
         return None
 
-    if user_id in conversations:
+    if user_id in app_state.conversations:
         reply = continue_conversation(user_id, msg_text)
         if reply is not None:
             say(reply)
         return None
 
-    if MY_USER in msg_text:
+    if app_state.bot_user_ref in msg_text:
         direct_msg = True
-        msg_parts = msg_text.split(MY_USER,1)
+        msg_parts = msg_text.split(app_state.bot_user_ref,1)
         msg_parts_stripped = [strip_punc(m) for m in msg_parts]
         if len(msg_parts_stripped[1]) > 0:
             msg_text = msg_parts_stripped[1]
@@ -238,8 +220,8 @@ def proc_msg(event, say, client):
         reply = "These are all of the yarn weights I know about:\n"
         for w in sorted(data.yarn_weights.keys(),key=lambda x: data.yarn_weights[x]['number']):
             reply += "  *{0}*: {1} ply, {2} wpi, {3} per 4 in. typical gauge, number {4}\n".format(w,
-                     data.yarn_weights[w]['ply'],yarn_weights[w]['wpi'],yarn_weights[w]['gauge'],
-                     data.yarn_weights[w]['number'])
+                     data.yarn_weights[w]['ply'],data.yarn_weights[w]['wpi'],
+                     data.yarn_weights[w]['gauge'],data.yarn_weights[w]['number'])
 
     elif msg_stripped == 'needles' or msg_stripped == 'hooks':
         reply = "These are all of the needles/hooks I know about:\n"
@@ -261,7 +243,7 @@ def proc_msg(event, say, client):
 
     elif msg_stripped == 'runningconversations':
         try:
-            convs = [ u + ': ' + c.label for (u,c) in conversations.items() ]
+            convs = [ u + ': ' + c.label for (u,c) in app_state.conversations.items() ]
             reply = '\n'.join(convs)
         except:
             reply = "Couldn't list conversations"
@@ -442,7 +424,7 @@ def proc_msg(event, say, client):
 
         except Exception as e:
             reply = 'Ravelry command error'
-            logging.warn('Ravelry error line {0}: {1}'.format(sys.exc_info()[2].tb_lineno,e.message) )
+            logging.warn('Ravelry error line {0}: {1}'.format(sys.exc_info()[2].tb_lineno,e) )
 
     elif msg_stripped == 'hello' or msg_stripped == 'hi' or msg_stripped.startswith('hello ') or msg_stripped.startswith('hi '):
         reply_ind = random.choice( range(len(data.greetings)) )
@@ -450,8 +432,8 @@ def proc_msg(event, say, client):
     elif msg_stripped.startswith('good') and (msg_stripped.endswith('morning') or msg_stripped.endswith('afternoon') or msg_stripped.endswith('night') or msg_stripped.endswith('evening')):
         reply = ':kissing_heart:'
     elif msg_stripped == 'info':
-        reply = "I'm yarnbot {0}, started on {1}.\n".format(VERSION, time.ctime(start_time))
-        reply += "I've processed {0} events, {1} messages ({2} unknown), and had to reconnect {3} times.".format(event_count, message_count, unknown_count, reconnect_count)
+        reply = "I'm yarnbot {0}, started on {1}.\n".format(__version__, time.ctime(app_state.start_time))
+        reply += "I've processed {0} events and {1} messages ({2} unknown).".format(app_state.event_count, app_state.message_count, app_state.unknown_count)
     elif msg_text == 'go to sleep':
         logging.warn('Got kill message')
         say("Ok, bye.")
@@ -461,12 +443,12 @@ def proc_msg(event, say, client):
     elif ('thank you' in msg_lower) or ('thanks' in msg_lower):
         reply = "My pleasure!"
     elif ('tell' in msg_lower and 'joke' in msg_lower) or ('know' in msg_lower and 'jokes' in msg_lower):
-        reply_ind = random.choice( range(len(data.jokes)) );
-        reply = jokes[reply_ind]
+        reply_ind = random.choice( range(len(data.jokes)) )
+        reply = data.jokes[reply_ind]
     else:
-        reply_ind = random.choice( range(len(data.unknown_replies)) );
+        reply_ind = random.choice( range(len(data.unknown_replies)) )
         reply = data.unknown_replies[reply_ind]
-        unknown_count += 1
+        app_state.unknown_count += 1
 
     say(reply)
 
@@ -541,40 +523,37 @@ def welcome_msg(client, user_id, from_user_id=None):
 
 @app.event('team_join')
 def welcome_user(event, client):
-    global known_users
 
     user = event['user']
 
     if 'is_bot' in user and user['is_bot']:
         return
         
-    if user['id'] not in known_users:
-        known_users.append(user['id'])
+    if user['id'] not in app_state.known_users:
+        app_state.known_users.append(user['id'])
         save_userdb()
         logging.info('Sending welcome message')
         welcome_msg(client, user['id'])
 
 
 def load_userdb():
-    global known_users
 
     try:
         userdb_file = open(USERDB_FILENAME, 'rb')
     except:
         userdb_file = open(USERDB_FILENAME, 'wb')
-        pickle.dump(known_users, userdb_file)
+        pickle.dump(app_state.known_users, userdb_file)
         userdb_file.close()
         return
 
     try:
-        known_users = pickle.load(userdb_file)
+        app_state.nown_users = pickle.load(userdb_file)
     except:
         logging.error('Malformed userdb file')
     
     userdb_file.close()
 
 def save_userdb():
-    global known_users
 
     try:
         userdb_file = open(USERDB_FILENAME, 'wb')
@@ -582,31 +561,32 @@ def save_userdb():
         logging.error("Couldn't write userdb file")
         return
 
-    pickle.dump(known_users, userdb_file)
+    pickle.dump(app_state.known_users, userdb_file)
     
     userdb_file.close()
 
-def main():
-    global app
-    global known_users
+
+def main(app):
 
     logging.basicConfig(filename='yarnbot.log',level=logging.INFO)
     
-    start_time = time.time()
+    app_state.start_time = time.time()
 
     auth_info = app.client.auth_test()
 
-    MY_USER_ID = auth_info['user_id']
+    my_user_id = auth_info['user_id']
 
-    logging.info('My user id is {0}'.format(MY_USER_ID))
+    logging.info('My user id is {0}'.format(my_user_id))
 
-    MY_USER = '<@' + MY_USER_ID + '>'
-    known_users = [MY_USER_ID]
+    my_user = '<@' + my_user_id + '>'
+    app_state.bot_user_id = my_user_id
+    app_state.bot_user_ref = my_user
+    app_state.known_users = [my_user_id]
 
     load_userdb()
 
     app.start()
 
 if __name__ == '__main__':
-    main()
+    main(app)
 
