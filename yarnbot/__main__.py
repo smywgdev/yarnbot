@@ -1,4 +1,4 @@
-from .app import *
+from .app import main,app
 
 main(app)
 
