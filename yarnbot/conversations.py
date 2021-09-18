@@ -92,7 +92,7 @@ class State:
         '''
         self.msg = msg
 
-    def add_trans(self, to_state: State, accept_fn: AcceptFn):
+    def add_trans(self, to_state: 'State', accept_fn: AcceptFn):
         '''
         Create a transition from this state to another.
 
@@ -159,7 +159,7 @@ class State:
         #print(f'***** Extracted {data}')
         return data
 
-    def exit(self, resp: str) -> Optional[State]:
+    def exit(self, resp: str) -> Optional['State']:
         '''
         Given response text, choose next state.
 
