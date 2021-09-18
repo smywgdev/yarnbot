@@ -18,9 +18,10 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         pip install pylint mypy
+        yes | mypy --install-types yarnbot || true
     - name: Analysing the code with mypy
       run: |
-        yes | mypy --install-types yarnbot
+        yes | mypy yarnbot
     - name: Analysing the code with pylint
       run: |
         pylint yarnbot
