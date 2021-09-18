@@ -100,6 +100,11 @@ def proc_msg(event, say, client):
 
     evt = event
 
+    logging.debug(str(evt))
+
+    if 'user' not in evt:
+        return None
+
     user_id = evt['user']
     channel_id = evt['channel']
     msg_text = evt['text']
