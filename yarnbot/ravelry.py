@@ -2,6 +2,8 @@ import os
 import json
 import requests
 
+from . import data
+
 RAV_ACC_KEY = os.environ.get('RAV_ACC_KEY')
 RAV_SEC_KEY = os.environ.get('RAV_SEC_KEY')
 
@@ -98,14 +100,14 @@ def ravelry_api_yarn(rav_cmd, page_size=5):
     msg = u'Yarn search results for:'
     
     filter_weight = []
-    for w in yarn_weights.keys():
+    for w in data.yarn_weights.keys():
         s = w.lower().replace(' ','-')
         if s in rav_cmd:
             filter_weight.append(s)
             rav_cmd.remove(s)
 
     filter_fiber = []
-    for f in yarn_fibers:
+    for f in data.yarn_fibers:
         if f in rav_cmd:
             filter_fiber.append(f)
             rav_cmd.remove(f)
@@ -215,7 +217,7 @@ def ravelry_pattern(rav_cmd):
         rav_cmd.remove('crochet')
     
     filter_weight = []
-    for w in yarn_weights.keys():
+    for w in data.yarn_weights.keys():
         s = w.lower().replace(' ','-')
         if s in rav_cmd:
             filter_weight.append(s)
