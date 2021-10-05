@@ -9,7 +9,6 @@ class AppState:
     conversations: Dict[str,Conversation] = field(default_factory=dict)
     message_count: int = 0
     unknown_count: int = 0
-    event_count: int = 0
     start_time: float = 0
     bot_user_id: str = ''
     bot_user_ref: str = ''

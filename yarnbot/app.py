@@ -112,6 +112,8 @@ def proc_msg(event, say, client):
     if user_id == app_state.bot_user_id:
         return None
     
+    app_state.message_count += 1
+
     direct_msg = channel_id.startswith('D')
 
     if ':sheep:' in msg_text:
@@ -438,7 +440,7 @@ def proc_msg(event, say, client):
         reply = ':kissing_heart:'
     elif msg_stripped == 'info':
         reply = "I'm yarnbot {0}, started on {1}.\n".format(__version__, time.ctime(app_state.start_time))
-        reply += "I've processed {0} events and {1} messages ({2} unknown).".format(app_state.event_count, app_state.message_count, app_state.unknown_count)
+        reply += "I've processed {0} messages ({1} unknown).".format(app_state.message_count, app_state.unknown_count)
     elif msg_text == 'go to sleep':
         logging.warn('Got kill message')
         say("Ok, bye.")
@@ -471,9 +473,6 @@ def send_msg(client, channel_id, msg, attach=None):
             as_user=True,
             text=msg,
             attachments=attach)
-
-
-
 
 def send_direct_msg(client, user_id, msg):
 
