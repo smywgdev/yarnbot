@@ -1,3 +1,5 @@
+from typing import Dict,TypedDict,Optional
+
 greetings = ["Hi!", "Hello there!", "Hello!", "Greetings, fair yarn worker!"]
 
 unknown_replies = ["I'm not sure what you mean.",
@@ -9,20 +11,28 @@ unknown_replies = ["I'm not sure what you mean.",
            ":confused:",
            ":persevere:"]
 
-acronyms = {
+AcronymData = TypedDict('AcronymData', {'desc':str, 'url':Optional[str]})
+
+acronyms: Dict[str,AcronymData] = {
     'pat': {'desc': 'pattern', 'url': None},
     'pats': {'desc': 'patterns', 'url': None},
     'patt': {'desc': 'pattern', 'url': None},
     'pm': {'desc': 'place marker', 'url': None},
     'pop': {'desc': 'popcorn', 'url': None},
-    'p2tog': {'desc': 'purl 2 stitches together', 'url': 'http://www.vogueknitting.com/pattern_help/how-to/beyond_the_basics/decreases/k2tog'},
-    'psso': {'desc': 'pass slipped stitch over', 'url': 'http://newstitchaday.com/pass-slipped-stitch-over-decrease/'},
+    'p2tog': {
+        'desc': 'purl 2 stitches together',
+        'url': 'http://www.vogueknitting.com/pattern_help/how-to/beyond_the_basics/decreases/k2tog'},
+    'psso': {
+        'desc': 'pass slipped stitch over',
+        'url': 'http://newstitchaday.com/pass-slipped-stitch-over-decrease/'},
     'pwise': {'desc': 'purlwise', 'url': None},
     'beg': {'desc': 'begin/beginning', 'url': None},
     'rem': {'desc': 'remain/remaining', 'url': None},
     'bet': {'desc': 'between', 'url': None},
     'rep': {'desc': 'repeat(s)', 'url': None},
-    'bo': {'desc': 'bind off', 'url': 'http://www.vogueknitting.com/pattern_help/how-to/learn_to_knit/binding_off'},
+    'bo': {
+        'desc': 'bind off',
+        'url': 'http://www.vogueknitting.com/pattern_help/how-to/learn_to_knit/binding_off'},
     'ca': {'desc': 'color A', 'url': None},
     'rh': {'desc': 'right hand', 'url': None},
     'cb': {'desc': 'color B ', 'url': None},
@@ -32,12 +42,19 @@ acronyms = {
     'rs': {'desc': 'right side ', 'url': None},
     'sk': {'desc': 'skip', 'url': None},
     'cn': {'desc': 'cable needle', 'url': None},
-    'skp': {'desc': 'slip, knit, pass stitch over; one stitch decreased', 'url': 'http://www.vogueknitting.com/pattern_help/how-to/beyond_the_basics/decreases/skp'},
-    'co': {'desc': 'cast on', 'url': 'http://www.vogueknitting.com/pattern_help/how-to/learn_to_knit/first_stitches'},
-    'sk2p': {'desc': 'slip 1, knit 2 together, pass slip stitch over the knit 2 together; 2 stitches have been decreased', 'url': 'http://newstitchaday.com/slip-knit-two-pass-double-decrease/'},
+    'skp': {
+        'desc': 'slip, knit, pass stitch over; one stitch decreased',
+        'url': 'http://www.vogueknitting.com/pattern_help/how-to/beyond_the_basics/decreases/skp'},
+    'co': {
+        'desc': 'cast on',
+        'url': 'http://www.vogueknitting.com/pattern_help/how-to/learn_to_knit/first_stitches'},
+    'sk2p': {
+        'desc': 'slip 1, knit 2 together, pass slip stitch over the knit 2 together; 2 stitches have been decreased',
+        'url': 'http://newstitchaday.com/slip-knit-two-pass-double-decrease/'},
     'cont': {'desc': 'continue ', 'url': None},
-    'sl': {'desc': 'slip ', 'url': None},
-    'dec': {'desc': 'decrease/decreases/decreasing', 'url': 'http://www.vogueknitting.com/pattern_help/how-to/beyond_the_basics/decreases'},
+    'dec': {
+        'desc': 'decrease/decreases/decreasing',
+        'url': 'http://www.vogueknitting.com/pattern_help/how-to/beyond_the_basics/decreases'},
     'sl1k': {'desc': 'slip 1 knitwise', 'url': 'https://www.youtube.com/watch?v=_Wh8kmdqfcw'},
     'dpn': {'desc': 'double pointed needle(s)', 'url': None},
     'sl1p': {'desc': 'slip 1 purlwise', 'url': 'https://www.youtube.com/watch?v=6EX_KbVknP0'},
@@ -45,15 +62,22 @@ acronyms = {
     'sl': {'desc': 'st slip stitch(es)', 'url': None},
     'foll': {'desc': 'follow/follows/following', 'url': None},
     'ss': {'desc': 'slip stitch', 'url': None},
-    'ssk': {'desc': 'slip, slip, knit these 2 stiches together; decrease', 'url': 'http://www.vogueknitting.com/pattern_help/how-to/beyond_the_basics/decreases/ssk'},
-    'inc': {'desc': 'increase/increases/increasing', 'url': 'http://www.vogueknitting.com/pattern_help/how-to/beyond_the_basics/increases'},
-    'sssk': {'desc': 'slip, slip, slip, knit 3 stitches together', 'url': 'http://newstitchaday.com/slip-slip-slip-knit-double-decrease/'},
+    'ssk': {
+        'desc': 'slip, slip, knit these 2 stiches together; decrease',
+        'url': 'http://www.vogueknitting.com/pattern_help/how-to/beyond_the_basics/decreases/ssk'},
+    'inc': {
+        'desc': 'increase/increases/increasing',
+        'url': 'http://www.vogueknitting.com/pattern_help/how-to/beyond_the_basics/increases'},
+    'sssk': {
+        'desc': 'slip, slip, slip, knit 3 stitches together',
+        'url': 'http://newstitchaday.com/slip-slip-slip-knit-double-decrease/'},
     'k': {'desc': 'knit', 'url': 'http://www.vogueknitting.com/pattern_help/how-to/learn_to_knit/the_knit_stitch'},
     'kfb': {'desc': 'knit front and back', 'url': 'http://newstitchaday.com/knit-front-and-back-increase-kfb/'},
     'st': {'desc': 'stitch', 'url': None},
     'sts': {'desc': 'stitches', 'url': None},
-    'k2tog': {'desc': 'knit 2 stitches together', 'url': 'http://www.vogueknitting.com/pattern_help/how-to/beyond_the_basics/decreases/k2tog'},
-    'st': {'desc': 'st stockinette stitch/stocking stitch', 'url': None},
+    'k2tog': {
+        'desc': 'knit 2 stitches together',
+        'url': 'http://www.vogueknitting.com/pattern_help/how-to/beyond_the_basics/decreases/k2tog'},
     'kwise': {'desc': 'knitwise', 'url': None},
     'tbl': {'desc': 'through back loop', 'url': 'http://newstitchaday.com/k-tbl-knit-through-back-loop/'},
     'lh': {'desc': 'left hand', 'url': None},
@@ -62,9 +86,15 @@ acronyms = {
     'lps': {'desc': 'loops', 'url': None},
     'ws': {'desc': 'wrong side', 'url': None},
     'wyib': {'desc': 'with yarn in back', 'url': None},
-    'm1': {'desc': 'make one stitch', 'url': 'http://www.vogueknitting.com/pattern_help/how-to/beyond_the_basics/increases/make_one_increase'},
-    'm1r': {'desc': 'make one stitch right', 'url': 'http://newstitchaday.com/m1r-make-one-right-increase-knitting/'},
-    'm1l': {'desc': 'make one stitch left', 'url': 'http://newstitchaday.com/m1l-make-one-left-increase-knitting/'},
+    'm1': {
+        'desc': 'make one stitch',
+        'url': 'http://www.vogueknitting.com/pattern_help/how-to/beyond_the_basics/increases/make_one_increase'},
+    'm1r': {
+        'desc': 'make one stitch right',
+        'url': 'http://newstitchaday.com/m1r-make-one-right-increase-knitting/'},
+    'm1l': {
+        'desc': 'make one stitch left',
+        'url': 'http://newstitchaday.com/m1l-make-one-left-increase-knitting/'},
     'wyif': {'desc': 'with yarn in front', 'url': None},
     'mc': {'desc': 'main color', 'url': None},
     'yfwd': {'desc': 'yarn forward', 'url': None},
@@ -74,7 +104,7 @@ acronyms = {
     'p': {'desc': 'purl', 'url': 'http://www.vogueknitting.com/pattern_help/how-to/learn_to_knit/the_purl_stitch'},
     'yon': {'desc': 'yarn over needle', 'url': None}}
 
-yarn_weights = {
+yarn_weights: Dict[str,dict] = {
     'cobweb':      {'ply': 1, 'wpi': '??', 'gauge': '??', 'number': 0},
     'lace':        {'ply': 2, 'wpi': '??', 'gauge': '32-34', 'number': 0},
     'light fingering': {'ply': 3, 'wpi': '??', 'gauge': '32', 'number': 0},
@@ -117,12 +147,11 @@ yarn_fibers = [
     'yak'
     ]
 
-needles_by_us = {
+needles_by_us: Dict[str,dict] = {
     '0': {'metric': '2.0', 'uk': '14', 'crochet': '-'},
     '1': {'metric': '2.25', 'uk': '13', 'crochet': 'B'},
     '2': {'metric': '2.75', 'uk': '12', 'crochet': 'C'},
-    '3': {'metric': '3.0', 'uk': '11', 'crochet': '-'},
-    '3': {'metric': '3.25', 'uk': '10', 'crochet': 'D'},
+    '3': {'metric': '3.0/3.25', 'uk': '10/11', 'crochet': 'D'},
     '4': {'metric': '3.5', 'uk': '9', 'crochet': 'E'},
     '5': {'metric': '3.75', 'uk': '9', 'crochet': 'F'},
     '6': {'metric': '4.0', 'uk': '8', 'crochet': 'G'},
@@ -140,7 +169,7 @@ needles_by_us = {
     '35': {'metric': '20.0', 'uk': '-', 'crochet': '-'},
     '50': {'metric': '50.0', 'uk': '-', 'crochet': '-'},
     }
-needles_by_metric = {
+needles_by_metric: Dict[str,dict] = {
     '2.00': {'us': '0', 'uk': '14', 'crochet': '-'},
     '2.25': {'us': '1', 'uk': '13', 'crochet': 'B'},
     '2.50': {'us': '-', 'uk': '12', 'crochet': '-'},
@@ -165,7 +194,7 @@ needles_by_metric = {
     '20.00': {'us': '35', 'uk': '-', 'crochet': '-'},
     '50.00': {'us': '50', 'uk': '-', 'crochet': '-'},
     }
-needles_by_crochet = {
+needles_by_crochet: Dict[str,dict] = {
     'B': {'us': '1', 'uk': '13', 'metric': '2.25'},
     'C': {'us': '2', 'uk': '12', 'metric': '2.75'},
     'D': {'us': '3', 'uk': '10', 'metric': '3.25'},
@@ -178,15 +207,13 @@ needles_by_crochet = {
     'K': {'us': '10.5', 'uk': '3', 'metric': '6.5'},
     'L': {'us': '11', 'uk': '0', 'metric': '8.0'}
     }
-needles_by_uk = {
+needles_by_uk: Dict[str,dict] = {
     '14': {'us': '0', 'crochet': '-', 'metric': '2.0'},
     '13': {'us': '1', 'crochet': 'B', 'metric': '2.25'},
-    '12': {'us': '-', 'crochet': '-', 'metric': '2.5'},
-    '12': {'us': '2', 'crochet': 'C', 'metric': '2.75'},
+    '12': {'us': '2', 'crochet': 'C', 'metric': '2.5/2.75'},
     '11': {'us': '3', 'crochet': '-', 'metric': '3.0'},
     '10': {'us': '3', 'crochet': 'D', 'metric': '3.25'},
-    '9': {'us': '4', 'crochet': 'E', 'metric': '3.5'},
-    '9': {'us': '5', 'crochet': 'F', 'metric': '3.75'},
+    '9': {'us': '4/5', 'crochet': 'E/F', 'metric': '3.5/3.75'},
     '8': {'us': '6', 'crochet': 'G', 'metric': '4.0'},
     '7': {'us': '7', 'crochet': '-', 'metric': '4.5'},
     '6': {'us': '8', 'crochet': 'H', 'metric': '5.0'},
@@ -207,5 +234,4 @@ jokes = [
     "How do you make knitted jewelry?\n\nWith purls.",
     "Why are Christmas trees bad at knitting?\n\nBecause they keep dropping their needles",
     "What did the knitted cap say to the afghan?\n\nYou stay here, I'll go on a head."]
-
 

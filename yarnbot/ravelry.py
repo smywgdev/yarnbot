@@ -24,31 +24,31 @@ def yarn_distance(yarn1, yarn2):
 
 
     # Density
-    if mass1 != None and yards1 != None:
+    if mass1 is not None and yards1 is not None:
         density1 = float(mass1)/float(yards1)
     else:
         density1 = None
 
-    if mass2 != None and yards2 != None:
+    if mass2 is not None and yards2 is not None:
         density2 = float(mass2)/float(yards2)
     else:
         density2 = None
 
     # Gauge
-    if gauge_div1 != None and min_gauge1 != None:
+    if gauge_div1 is not None and min_gauge1 is not None:
         min_gauge_norm1 = min_gauge1/gauge_div1
     else:
         min_gauge_norm1 = None
-    if gauge_div1 != None and max_gauge1 != None:
+    if gauge_div1 is not None and max_gauge1 is not None:
         max_gauge_norm1 = max_gauge1/gauge_div1
     else:
         max_gauge_norm1 = None
 
-    if gauge_div2 != None and min_gauge2 != None:
+    if gauge_div2 is not None and min_gauge2 is not None:
         min_gauge_norm2 = min_gauge2/gauge_div2
     else:
         min_gauge_norm2 = None
-    if gauge_div2 != None and max_gauge2 != None:
+    if gauge_div2 is not None and max_gauge2 is not None:
         max_gauge_norm2 = max_gauge2/gauge_div2
     else:
         max_gauge_norm2 = None
@@ -59,21 +59,21 @@ def yarn_distance(yarn1, yarn2):
     dist = lambda x,y: float(abs(x-y))/(x+y)
     d = 0.
 
-    if density1 != None and density2 != None:
+    if density1 is not None and density2 is not None:
         d += dist(density1,density2)
     else:
         d += 0.5
 
-    if wpi1 != None and wpi2 != None:
+    if wpi1 is not None and wpi2 is not None:
         d += dist(wpi1,wpi2)
     else:
         d += 0.5
 
-    if min_gauge_norm1 != None and min_gauge_norm2 != None:
+    if min_gauge_norm1 is not None and min_gauge_norm2 is not None:
         d += dist(min_gauge_norm1,min_gauge_norm1)
     else:
         d += 0.5
-    if max_gauge_norm1 != None and max_gauge_norm2 != None:
+    if max_gauge_norm1 is not None and max_gauge_norm2 is not None:
         d += dist(max_gauge_norm1,max_gauge_norm1)
     else:
         d += 0.5
@@ -98,7 +98,7 @@ def ravelry_api_yarn(rav_cmd, page_size=5):
 
     parms = {'photo':'yes', 'page_size':str(page_size), 'sort':'projects'}
     msg = u'Yarn search results for:'
-    
+
     filter_weight = []
     for w in data.yarn_weights.keys():
         s = w.lower().replace(' ','-')
@@ -125,7 +125,7 @@ def ravelry_api_yarn(rav_cmd, page_size=5):
     msg += u' containing "{0}"'.format(' '.join(rav_cmd))
 
     rav_result = ravelry_api('/yarns/search.json', parms)
-    
+
     return (rav_result, msg, parms)
 
 
@@ -138,7 +138,7 @@ def ravelry_yarn(rav_cmd):
 
     attachments = []
     for info in rav_result['yarns']:
-        
+
         mach_wash = info['machine_washable'] if 'machine_washable' in info else None
         if mach_wash == None or not mach_wash:
             mach_wash = 'No'
@@ -156,11 +156,11 @@ def ravelry_yarn(rav_cmd):
         else:
             description = u'roving?'
 
-        if info['gauge_divisor'] != None:
+        if info['gauge_divisor'] is not None:
             gauge_range = []
-            if info['min_gauge'] != None:
+            if info['min_gauge'] is not None:
                 gauge_range.append(str(info['min_gauge']))
-            if info['max_gauge'] != None:
+            if info['max_gauge'] is not None:
                 gauge_range.append(str(info['max_gauge']))
 
             description += u', {0} sts = {1} in'.format(' to '.join(gauge_range), info['gauge_divisor'])
@@ -198,7 +198,7 @@ def ravelry_pattern(rav_cmd):
 
     parms = {'photo':'yes', 'page_size':'5', 'sort':'best'}
     msg = u'Pattern search results for:'
-    
+
     filter_free = 'free' in rav_cmd
     if filter_free:
         rav_cmd.remove('free')
@@ -215,7 +215,7 @@ def ravelry_pattern(rav_cmd):
     if 'crochet' in rav_cmd:
         filter_craft.append('crochet')
         rav_cmd.remove('crochet')
-    
+
     filter_weight = []
     for w in data.yarn_weights.keys():
         s = w.lower().replace(' ','-')
@@ -249,7 +249,7 @@ def ravelry_pattern(rav_cmd):
 
     attachments = []
     for pat in rav_result['patterns']:
-        
+
         attachment = dict()
         attachment['fallback'] = pat['name']
         attachment['color'] = '#36a64f'

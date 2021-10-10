@@ -33,19 +33,24 @@ Transition = TypedDict('Transition', {'state': 'State', 'accept': AcceptFn})
 
 # Accept functions
 def accept_string(s: str) -> AcceptFn:
+    '''Accept function for a single string'''
     return lambda m: s.lower() in m.lower()
 
 def accept_any_strings(*ss: str) -> AcceptFn:
+    '''Accept function for some number of strings (logical or)'''
     return lambda m: any(s.lower() in m.lower() for s in ss)
 
 def accept_all_strings(*ss: str) -> AcceptFn:
+    '''Accept function for some number of strings (logical and)'''
     return lambda m: all(s.lower() in m.lower() for s in ss)
 
 def accept() -> AcceptFn:
+    '''Always accepts'''
     return lambda _: True
 
 # Extract functions
 def extract_integer(_data: Dict[str,T], msg: str) -> Optional[int]:
+    '''Extraction function for integers'''
     result = re.search('(-?[0-9]+)', msg)
 
     if result is not None:
@@ -54,6 +59,7 @@ def extract_integer(_data: Dict[str,T], msg: str) -> Optional[int]:
     return None
 
 def extract_numeric(_data: Dict[str,T], msg: str) -> Optional[float]:
+    '''Extraction function for any numeric'''
     result = re.search(r'(-?[0-9]+\.?[0-9]*|[0-9]*\.?[0-9]+)', msg)
 
     if result is not None:
@@ -204,6 +210,10 @@ class Conversation:
     '''
 
     def __init__(self, name: str):
+        '''
+        Parameters:
+            name (str): Conversation name, to be used as a label.
+        '''
         self.name = name
         self.states = {'init': State('init', 'Subclass to have a real conversation')}
         self.current_state: Optional[State] = self.states['init']
@@ -279,6 +289,9 @@ class EaseConversation(Conversation):
         return float(data['stitches'])/(data['gauge']/4.) - data['meas']
 
     def __init__(self):
+        '''
+        Create an Ease conversation.
+        '''
         super().__init__('ease')
 
         self.states = {
