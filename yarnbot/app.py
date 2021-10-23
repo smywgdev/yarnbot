@@ -410,10 +410,10 @@ def proc_msg(event: Event, say: Say, client: WebClient) -> Optional[str]:
 
             elif rav_cmd[1] == 'yarn':
 
-                (msg, attach) = ravelry_yarn(rav_cmd[2:])
+                (yarn_msg, attach) = ravelry_yarn(rav_cmd[2:])
 
-                if msg is not None:
-                    send_msg(client, channel_id, msg, attach)
+                if yarn_msg is not None:
+                    send_msg(client, channel_id, yarn_msg, attach)
                 else:
                     say(':disappointed:')
 
@@ -422,10 +422,10 @@ def proc_msg(event: Event, say: Say, client: WebClient) -> Optional[str]:
 
             elif rav_cmd[1] == 'search':
 
-                (msg, attach) = ravelry_pattern(rav_cmd[2:])
+                (rav_search_msg, attach) = ravelry_pattern(rav_cmd[2:])
 
-                if msg is not None:
-                    send_msg(client, channel_id, msg, attach)
+                if rav_search_msg is not None:
+                    send_msg(client, channel_id, rav_search_msg, attach)
                 else:
                     say(':disappointed:')
 

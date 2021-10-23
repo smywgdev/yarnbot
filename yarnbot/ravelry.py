@@ -1,13 +1,19 @@
 import os
 import json
 import requests
+from requests.utils import quote # type: ignore
+
+from typing import Any, Dict, List, Optional, Tuple, TypedDict, Union
 
 from . import data
+
+#Json = Dict[str, Union[int,float,str,bool,'Json']]
+Json = Dict[str, Any]
 
 RAV_ACC_KEY = os.environ.get('RAV_ACC_KEY')
 RAV_SEC_KEY = os.environ.get('RAV_SEC_KEY')
 
-def yarn_distance(yarn1, yarn2):
+def yarn_distance(yarn1: Json, yarn2: Json) -> float:
 
     mass1 = yarn1['grams']
     mass2 = yarn2['grams']
@@ -24,34 +30,30 @@ def yarn_distance(yarn1, yarn2):
 
 
     # Density
+    density1: Optional[float] = None
     if mass1 is not None and yards1 is not None:
         density1 = float(mass1)/float(yards1)
-    else:
-        density1 = None
 
+    density2: Optional[float] = None
     if mass2 is not None and yards2 is not None:
         density2 = float(mass2)/float(yards2)
-    else:
-        density2 = None
 
     # Gauge
+    min_gauge_norm1: Optional[float] = None
     if gauge_div1 is not None and min_gauge1 is not None:
         min_gauge_norm1 = min_gauge1/gauge_div1
-    else:
-        min_gauge_norm1 = None
+
+    max_gauge_norm1: Optional[float] = None
     if gauge_div1 is not None and max_gauge1 is not None:
         max_gauge_norm1 = max_gauge1/gauge_div1
-    else:
-        max_gauge_norm1 = None
 
+    min_gauge_norm2: Optional[float] = None
     if gauge_div2 is not None and min_gauge2 is not None:
         min_gauge_norm2 = min_gauge2/gauge_div2
-    else:
-        min_gauge_norm2 = None
+
+    max_gauge_norm2: Optional[float] = None
     if gauge_div2 is not None and max_gauge2 is not None:
         max_gauge_norm2 = max_gauge2/gauge_div2
-    else:
-        max_gauge_norm2 = None
 
 
     # Distance measures
@@ -80,13 +82,13 @@ def yarn_distance(yarn1, yarn2):
 
     return d
 
-def ravelry_api(api_call, parms):
+def ravelry_api(api_call: str, parms: Json) -> Json:
 
     req = requests.get('https://api.ravelry.com/' + api_call, auth=(RAV_ACC_KEY,RAV_SEC_KEY), params=parms)
 
     return req.json()
 
-def ravelry_api_yarn(rav_cmd, page_size=5):
+def ravelry_api_yarn(rav_cmd: List[str], page_size: int = 5) -> Tuple[Json,str,Dict[str,str]]:
 
 
     filtered_words = ['or','and','pattern',
@@ -129,9 +131,9 @@ def ravelry_api_yarn(rav_cmd, page_size=5):
     return (rav_result, msg, parms)
 
 
-def ravelry_yarn(rav_cmd):
+def ravelry_yarn(rav_cmd: List[str]) -> Tuple[Optional[str],Optional[List[Json]]]:
 
-    (rav_result, msg, parms) = ravelry_api_yarn(rav_cmd)
+    (rav_result, msg, _parms) = ravelry_api_yarn(rav_cmd)
 
     if rav_result['paginator']['results'] == 0:
         return (None,None)
@@ -183,11 +185,9 @@ def ravelry_yarn(rav_cmd):
 
         attachments.append( attachment )
 
-    attach_json = json.dumps( attachments )
+    return (msg, attachments)
 
-    return (msg, attach_json)
-
-def ravelry_pattern(rav_cmd):
+def ravelry_pattern(rav_cmd: List[str]) -> Tuple[Optional[str],Optional[List[Json]]]:
 
     filtered_words = ['or','and','pattern',
         'patterns','with','using','yarn',
@@ -236,7 +236,7 @@ def ravelry_pattern(rav_cmd):
     parms.update({'query':' '.join(rav_cmd)})
     msg += u' containing "{0}"'.format(' '.join(rav_cmd))
 
-    search_query = '&'.join([ k + '=' + requests.utils.quote(v) for (k,v) in parms.items() if k != 'page_size'])
+    search_query = '&'.join([ k + '=' + quote(v) for (k,v) in parms.items() if k != 'page_size'])
     search_url = 'http://www.ravelry.com/patterns/search#' + search_query
 
     msg += u'\n(<{0}|search on ravelry>)'.format(search_url)
@@ -261,8 +261,6 @@ def ravelry_pattern(rav_cmd):
         attachments.append( attachment )
 
 
-    attach_json = json.dumps( attachments )
-
-    return (msg,attach_json)
+    return (msg,attachments)
 
 
