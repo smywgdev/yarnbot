@@ -1,8 +1,8 @@
-from typing import Dict,TypedDict,Optional
+from typing import Dict,List,TypedDict,Optional
 
-greetings = ["Hi!", "Hello there!", "Hello!", "Greetings, fair yarn worker!"]
+greetings: List[str] = ["Hi!", "Hello there!", "Hello!", "Greetings, fair yarn worker!"]
 
-unknown_replies = ["I'm not sure what you mean.",
+unknown_replies: List[str]  = ["I'm not sure what you mean.",
            "I'm sorry, I don't know that.",
            "I'm just a sheep.",
            "I know a lot about other things that aren't that thing.",
@@ -118,7 +118,7 @@ yarn_weights: Dict[str,dict] = {
     'jumbo':       {'ply': '??', 'wpi': '0-4', 'gauge': '0-6', 'number': 7}
     }
 
-yarn_fibers = [
+yarn_fibers: List[str] = [
     'acrylic',
     'alpaca',
     'angora',
@@ -227,7 +227,7 @@ needles_by_uk: Dict[str,dict] = {
     '000': {'us': '15', 'crochet': '-', 'metric': '10.0'},
     }
 
-jokes = [
+jokes: List[str] = [
     "Why did the pig farmer give up knitting?\n\nHe didn't want to cast his purls before swine.",
     "Did you hear what happened to the cat who ate a ball of yarn?\n\nShe had mittens.",
     "So this lady was driving down the highway crocheting as she drove. A highway patrolman noticed her and began pursuit. He drove up next to her car, rolled down his window and said, 'Pull over!' She replied, 'No, it's a scarf!'",
