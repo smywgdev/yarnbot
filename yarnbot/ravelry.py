@@ -1,13 +1,12 @@
 import os
-import json
 import requests
 from requests.utils import quote # type: ignore
 
-from typing import Any, Dict, List, Optional, Tuple, TypedDict, Union
+from typing import Any, Dict, List, Optional, Tuple
 
 from . import data
 
-#Json = Dict[str, Union[int,float,str,bool,'Json']]
+# TODO replace with ravelry schemas
 Json = Dict[str, Any]
 
 RAV_ACC_KEY = os.environ.get('RAV_ACC_KEY')
