@@ -195,13 +195,13 @@ class Conversation:
     To define the state machine for a conversation, provide a dictionary of states
     in `self.state` containing State objects, with one special state called 'init'.
     State transitions are provided using the `State.add_trans` method. See `State`
-    for more details. For instance:
+    for more details. For instance::
 
-    self.states = {'init':State('init','Welcome to this state machine'},
-                   'A',State('A','This is state A, enter a number',{'num':extract_numeric})}
-                   'end',State('end','You said {num}. Bye.')}
-    self.states['init'].add_trans(self.states['A'],accept())
-    self.states['A'].add_trans(self.states['end'],accept())
+        self.states = {'init':State('init','Welcome to this state machine'),
+                       'A':State('A','This is state A, enter a number',{'num':extract_numeric}),
+                       'end':State('end','You said {num}. Bye.')}
+        self.states['init'].add_trans(self.states['A'],accept())
+        self.states['A'].add_trans(self.states['end'],accept())
 
     Running this state machine will first print the welcome message, transition to
     'A', extract a number from response text, then transition to end. When finished,
