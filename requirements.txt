@@ -1,4 +1,3 @@
 requests
-slack-sdk
 slack-bolt
 

@@ -1,1 +1,3 @@
+requests
+slack-bolt
 karma-sphinx-theme
