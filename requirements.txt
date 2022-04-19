@@ -1,3 +1,4 @@
 requests
-slack_bolt
+slack-sdk
+slack-bolt
 
