@@ -18,8 +18,8 @@ from yarnbot import __version__
 # -- Project information -----------------------------------------------------
 
 project = 'yarnbot'
-copyright = '2022, Author'
-author = 'Author'
+copyright = '2022, Nigel Stepp'
+author = 'Nigel Stepp'
 
 # The short X.Y version
 version = __version__
