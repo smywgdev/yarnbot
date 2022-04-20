@@ -6,7 +6,8 @@ Ravelry for patterns, yarn, or user favorites.
 
 
 Yarnbot understands:
-* &lt;7 character abbreviations
+
+* <7 character abbreviations
 * Yarn weights
 * Needle/Hook sizes (say 'US 10', '5mm', 'Crochet L', etc)
 * Basic arithmetic expressions
@@ -15,7 +16,7 @@ Yarnbot understands:
 * **ravelry favorites** <Ravelry Username> **tagged** <tag>
 * **ravelry search** <search terms>: Search patterns
 * **ravelry yarn** <search terms>: Search yarn
-* **ravelry yarn similar to** &lt;search terms&gt;: Find similar yarn
+* **ravelry yarn similar to** <search terms>: Find similar yarn
 * **info**: Yarnbot info
 * **help**: Help text
 
