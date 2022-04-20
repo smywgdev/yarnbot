@@ -1,5 +1,5 @@
-yarnbot.state module
-====================
+yarnbot.state
+=============
 
 .. automodule:: yarnbot.state
    :members:

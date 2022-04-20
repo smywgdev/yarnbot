@@ -1,5 +1,5 @@
-yarnbot.ravelry module
-======================
+yarnbot.ravelry
+===============
 
 .. automodule:: yarnbot.ravelry
    :members:

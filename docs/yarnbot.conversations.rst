@@ -1,5 +1,5 @@
-yarnbot.conversations module
-============================
+yarnbot.conversations
+=====================
 
 .. automodule:: yarnbot.conversations
    :members:

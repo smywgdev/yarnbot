@@ -1,5 +1,5 @@
-yarnbot.app module
-==================
+yarnbot.app
+===========
 
 .. automodule:: yarnbot.app
    :members:

@@ -1,5 +1,5 @@
-yarnbot.data module
-===================
+yarnbot.data
+============
 
 .. automodule:: yarnbot.data
    :members:

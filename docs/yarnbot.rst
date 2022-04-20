@@ -1,5 +1,5 @@
-yarnbot package
-===============
+yarnbot
+=======
 
 .. automodule:: yarnbot
    :members:
