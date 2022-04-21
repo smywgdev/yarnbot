@@ -1,24 +1,22 @@
-'''
-    Yarnbot - Slack bot for yarn working
-
-    Copyright (C) 2017  Nigel D. Stepp
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, write to the Free Software Foundation, Inc.,
-    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
-    Nigel Stepp <stepp@atistar.net>
-'''
+#    Yarnbot - Slack bot for yarn working
+#
+#    Copyright (C) 2017  Nigel D. Stepp
+#
+#    This program is free software; you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; either version 2 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License along
+#    with this program; if not, write to the Free Software Foundation, Inc.,
+#    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+#    Nigel Stepp <stepp@atistar.net>
 
 import re
 from typing import (Any, Callable, Dict, List, Optional,
@@ -33,19 +31,24 @@ Transition = TypedDict('Transition', {'state': 'State', 'accept': AcceptFn})
 
 # Accept functions
 def accept_string(s: str) -> AcceptFn:
+    '''Accept function for a single string'''
     return lambda m: s.lower() in m.lower()
 
 def accept_any_strings(*ss: str) -> AcceptFn:
+    '''Accept function for some number of strings (logical or)'''
     return lambda m: any(s.lower() in m.lower() for s in ss)
 
 def accept_all_strings(*ss: str) -> AcceptFn:
+    '''Accept function for some number of strings (logical and)'''
     return lambda m: all(s.lower() in m.lower() for s in ss)
 
 def accept() -> AcceptFn:
+    '''Always accepts'''
     return lambda _: True
 
 # Extract functions
 def extract_integer(_data: Dict[str,T], msg: str) -> Optional[int]:
+    '''Extraction function for integers'''
     result = re.search('(-?[0-9]+)', msg)
 
     if result is not None:
@@ -54,6 +57,7 @@ def extract_integer(_data: Dict[str,T], msg: str) -> Optional[int]:
     return None
 
 def extract_numeric(_data: Dict[str,T], msg: str) -> Optional[float]:
+    '''Extraction function for any numeric'''
     result = re.search(r'(-?[0-9]+\.?[0-9]*|[0-9]*\.?[0-9]+)', msg)
 
     if result is not None:
@@ -189,13 +193,13 @@ class Conversation:
     To define the state machine for a conversation, provide a dictionary of states
     in `self.state` containing State objects, with one special state called 'init'.
     State transitions are provided using the `State.add_trans` method. See `State`
-    for more details. For instance:
+    for more details. For instance::
 
-    self.states = {'init':State('init','Welcome to this state machine'},
-                   'A',State('A','This is state A, enter a number',{'num':extract_numeric})}
-                   'end',State('end','You said {num}. Bye.')}
-    self.states['init'].add_trans(self.states['A'],accept())
-    self.states['A'].add_trans(self.states['end'],accept())
+        self.states = {'init':State('init','Welcome to this state machine'),
+                       'A':State('A','This is state A, enter a number',{'num':extract_numeric}),
+                       'end':State('end','You said {num}. Bye.')}
+        self.states['init'].add_trans(self.states['A'],accept())
+        self.states['A'].add_trans(self.states['end'],accept())
 
     Running this state machine will first print the welcome message, transition to
     'A', extract a number from response text, then transition to end. When finished,
@@ -204,6 +208,10 @@ class Conversation:
     '''
 
     def __init__(self, name: str):
+        '''
+        Parameters:
+            name (str): Conversation name, to be used as a label.
+        '''
         self.name = name
         self.states = {'init': State('init', 'Subclass to have a real conversation')}
         self.current_state: Optional[State] = self.states['init']
@@ -279,6 +287,9 @@ class EaseConversation(Conversation):
         return float(data['stitches'])/(data['gauge']/4.) - data['meas']
 
     def __init__(self):
+        '''
+        Create an Ease conversation.
+        '''
         super().__init__('ease')
 
         self.states = {

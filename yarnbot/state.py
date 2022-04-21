@@ -5,6 +5,11 @@ from .conversations import Conversation
 
 @dataclass
 class AppState:
+    '''
+    Keeps application state, to be easily made available
+    at the global scope.
+    '''
+
     known_users: List[str] = field(default_factory=list)
     conversations: Dict[str,Conversation] = field(default_factory=dict)
     message_count: int = 0

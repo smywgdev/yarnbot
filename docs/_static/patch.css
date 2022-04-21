@@ -1,0 +1,13 @@
+dl:not(.docutils) dt{
+  background:rgba(51, 195, 240, 0.1);
+  color:rgba(0, 174, 228, 0.9);
+}
+
+a {
+	color: #00aee4;
+}
+
+
+.c-primary{
+  color:#00aee4;
+}
