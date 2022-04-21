@@ -12,6 +12,7 @@ Welcome to yarnbot's documentation!
 
    yarnbot
 
+.. include:: ../README.rst
 
 Indices and tables
 ==================
